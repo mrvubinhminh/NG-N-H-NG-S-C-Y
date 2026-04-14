@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ngân hàng Sơ đồ câu hỏi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 overflow-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        // ================= COMPONENT BIỂU TƯỢNG (ICONS) =================
+        const ChevronRight = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"></polyline></svg>
+        );
+        const ChevronDown = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"></polyline></svg>
+        );
+        const Folder = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        );
+        const FileText = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        );
+        const Copy = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        );
+        const Check = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>
+        );
+        const Settings = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        );
+        const Layout = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        );
+        const Trash2 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        );
+        const PlusCircle = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        );
+        const BookOpen = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        );
+        const ExternalLink = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        );
+
+
+        // ================= DỮ LIỆU TOÁN 10 =================
+        const dataTo10 = [
+          {
+            id: "TO10.01",
+            title: "MỆNH ĐỀ - TẬP HỢP",
+            topics: [
+              {
+                title: "MỆNH ĐỀ VÀ MỆNH ĐỀ CHỨA BIẾN",
+                lessons: [
+                  { code: "[TO10.01.1.S01]", name: "Xác định mệnh đề, mệnh đề chứa biến" },
+                  { code: "[TO10.01.1.S02]", name: "Xét tính đúng sai của một mệnh đề" },
+                  { code: "[TO10.01.1.S03]", name: "Phủ định một mệnh đề" },
+                  { code: "[TO10.01.1.S04]", name: "Mệnh đề kéo theo, mệnh đề đảo, mệnh đề tương đương" },
+                  { code: "[TO10.01.1.S05]", name: "Áp dụng mệnh đề vào suy luận toán học" }
+                ]
+              },
+              {
+                title: "TẬP HỢP VÀ CÁC PHÉP TOÁN TẬP HỢP",
+                lessons: [
+                  { code: "[TO10.01.2.S01]", name: "Xác định một tập hợp" },
+                  { code: "[TO10.01.2.S02]", name: "Các phép toán về giao, hợp, hiệu của hai tập hợp" },
+                  { code: "[TO10.01.2.S03]", name: "Tập hợp con của một tập hợp, hai tập hợp bằng nhau" },
+                  { code: "[TO10.01.2.S04]", name: "Toán thực tế, ứng dụng của tập hợp" }
+                ]
+              },
+              {
+                title: "CÁC TẬP HỢP SỐ",
+                lessons: [
+                  { code: "[TO10.01.3.S01]", name: "Viết các tập hợp dưới dạng khoảng, đoạn, nửa khoảng" },
+                  { code: "[TO10.01.3.S02]", name: "Các phép toán về giao, hợp, hiệu của hai tập hợp" },
+                  { code: "[TO10.01.3.S03]", name: "Bài toán tham số về giao, hợp, hiệu của các tập hợp" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.02",
+            title: "BPT-HỆ BPT BẬC NHẤT 2 ẨN",
+            topics: [
+              {
+                title: "BẤT PHƯƠNG TRÌNH BẬC NHẤT HAI ẨN",
+                lessons: [
+                  { code: "[TO10.02.1.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO10.02.1.S02]", name: "Xác định điểm thuộc miền nghiệm của BPT dựa vào đồ thị" },
+                  { code: "[TO10.02.1.S03]", name: "Xác định điểm thuộc miền nghiệm của BPT dựa vào biểu thức" },
+                  { code: "[TO10.02.1.S04]", name: "Cho BPT, xác định miền nghiệm" },
+                  { code: "[TO10.02.1.S05]", name: "Cho miền nghiệm, xác định BPT" },
+                  { code: "[TO10.02.1.S06]", name: "Bài toán thực tế" }
+                ]
+              },
+              {
+                title: "HỆ BẤT PHƯƠNG TRÌNH BẬC NHẤT HAI ẨN",
+                lessons: [
+                  { code: "[TO10.02.2.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO10.02.2.S02]", name: "Xác định điểm thuộc miền nghiệm của  hệ BPT dựa vào đồ thị" },
+                  { code: "[TO10.02.2.S03]", name: "Xác định điểm thuộc miền nghiệm của hệ BPT dựa vào biểu thức" },
+                  { code: "[TO10.02.2.S04]", name: "Cho hệ BPT, xác định miền nghiệm" },
+                  { code: "[TO10.02.2.S05]", name: "Cho miền nghiệm, xác định hệ BPT" },
+                  { code: "[TO10.02.2.S06]", name: "Tìm GTLN, GTNN của biểu thức F(x,y)" },
+                  { code: "[TO10.02.2.S07]", name: "Bài toán thực tế" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.03",
+            title: "HỆ THỨC LƯỢNG TRONG TAM GIÁC",
+            topics: [
+              {
+                title: "GIÁ TRỊ LƯỢNG GIÁC GÓC TỪ 0 ĐẾN 180",
+                lessons: [
+                  { code: "[TO10.03.1.S01]", name: "Xác định giá trị lượng giác của góc đặc biệt" },
+                  { code: "[TO10.03.1.S02]", name: "Góc giữa hai véctơ" },
+                  { code: "[TO10.03.1.S03]", name: "Hệ thức liên quan đến giá trị lượng giác" },
+                  { code: "[TO10.03.1.S04]", name: "Giá trị của biểu thức lượng giác có điều kiện" },
+                  { code: "[TO10.03.1.S05]", name: "Tìm tham số để biểu thức thỏa mãn điều kiện cho trước" },
+                  { code: "[TO10.03.1.S06]", name: "Bài toán tổng hợp" }
+                ]
+              },
+              {
+                title: "CÁC HTL TRONG TAM GIÁC VÀ GIẢI TAM GIÁC",
+                lessons: [
+                  { code: "[TO10.03.2.S01]", name: "Xác định các yếu tố trong tam giác" },
+                  { code: "[TO10.03.2.S02]", name: "Hệ thức liên hệ giữa các yếu tố của tam giác" },
+                  { code: "[TO10.03.2.S03]", name: "Nhận dạng tam giác" },
+                  { code: "[TO10.03.2.S04]", name: "Giải tam giác" },
+                  { code: "[TO10.03.2.S05]", name: "Các bài toán thực tế về giải tam giác" },
+                  { code: "[TO10.03.2.S06]", name: "Các bài toán tổng hợp" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.04",
+            title: "VECTƠ",
+            topics: [
+              {
+                title: "CÁC KHÁI NIỆM VỀ VECTƠ",
+                lessons: [
+                  { code: "[TO10.04.1.S01]", name: "Câu hỏi lý thuyết chung" },
+                  { code: "[TO10.04.1.S02]", name: "Đếm số véctơ khác véctơ không" },
+                  { code: "[TO10.04.1.S03]", name: "Tìm véctơ cùng phương với véctơ đã cho" },
+                  { code: "[TO10.04.1.S04]", name: "Tìm véctơ cùng hướng với véctơ đã cho" },
+                  { code: "[TO10.04.1.S05]", name: "Tính độ dài của véctơ" },
+                  { code: "[TO10.04.1.S06]", name: "Hai véctơ bằng nhau" },
+                  { code: "[TO10.04.1.S07]", name: "Dựng điểm dựa vào đẳng thức véctơ" },
+                  { code: "[TO10.04.1.S08]", name: "Các bài toán về véctơ không" }
+                ]
+              },
+              {
+                title: "PHÉP CỘNG, TRỪ CÁC VECTƠ",
+                lessons: [
+                  { code: "[TO10.04.2.S01]", name: "Các câu hỏi lý thuyết" },
+                  { code: "[TO10.04.2.S02]", name: "Đẳng thức véctơ giải bằng quy tắc 3 điểm (trực tiếp)" },
+                  { code: "[TO10.04.2.S03]", name: "Đẳng thức véctơ giải bằng quy tắc 3 điểm (có đổi véctơ)" },
+                  { code: "[TO10.04.2.S04]", name: "Đẳng thức véctơ giải bằng quy tắc hình bình hành" },
+                  { code: "[TO10.04.2.S05]", name: "Tính độ dài véctơ tổng, hiệu dùng quy tắc 3 điểm" },
+                  { code: "[TO10.04.2.S06]", name: "Tính độ dài véctơ tổng, hiệu dùng quy tắc hình bình hành" },
+                  { code: "[TO10.04.2.S07]", name: "Tìm tập hợp điểm thoả điều kiện cho trước" },
+                  { code: "[TO10.04.2.S08]", name: "Xác định tính chất của 1 hình thoả điều kiện cho trước" },
+                  { code: "[TO10.04.2.S09]", name: "Các bài toán về giá trị lớn nhất, nhỏ nhất" }
+                ]
+              },
+              {
+                title: "TÍCH VÔ HƯỚNG CỦA HAI VECTƠ",
+                lessons: [
+                  { code: "[TO10.04.4.S01]", name: "Các câu hỏi lý thuyết" },
+                  { code: "[TO10.04.4.S02]", name: "Xác định góc giữa hai véctơ bằng định nghĩa" },
+                  { code: "[TO10.04.4.S03]", name: "Xác định góc giữa hai véctơ bằng tích vô hướng" },
+                  { code: "[TO10.04.4.S04]", name: "Tính TVH của hai véctơ bằng định nghĩa, tính chất" },
+                  { code: "[TO10.04.4.S06]", name: "Ứng dụng TVH vào quan hệ vuông góc" },
+                  { code: "[TO10.04.4.S12]", name: "Toán thực tế, ứng dụng của tích vô hướng" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.05",
+            title: "SỐ ĐẶC TRƯNG – MẪU SỐ LIỆU",
+            topics: [
+              {
+                title: "SỐ GẦN ĐÚNG. SAI SỐ",
+                lessons: [
+                  { code: "[TO10.05.1.S01]", name: "Viết số gần đúng với độ chính xác cho trước" },
+                  { code: "[TO10.05.1.S02]", name: "Tính toán số gần đúng, sai số" },
+                  { code: "[TO10.05.1.S03]", name: "Chữ số đáng tin (chữ số chắc) của số gần dúng" }
+                ]
+              },
+              {
+                title: "CÁC SỐ ĐẶC TRƯNG ĐO XU THẾ TRUNG TÂM",
+                lessons: [
+                  { code: "[TO10.05.2.S01]", name: "Tính số trung bình, trung vị, tứ phân vị, mốt" },
+                  { code: "[TO10.05.2.S02]", name: "Giải thích ý nghĩa, vai trò, kết luận từ đặc trưng đo xu thế trung tâm" }
+                ]
+              },
+              {
+                title: "CÁC SỐ ĐẶC TRƯNG ĐO ĐỘ PHÂN TÁN",
+                lessons: [
+                  { code: "[TO10.05.3.S01]", name: "Xác định khoảng biến thiên, khoảng tứ phân vị, phương sai, độ lệch chuẩn." },
+                  { code: "[TO10.05.3.S02]", name: "Nêu ý nghĩa các số đặc trưng đo độ phân tán" },
+                  { code: "[TO10.05.3.S03]", name: "Phát hiện các giá trị bất thường" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.06",
+            title: "HÀM SỐ - ĐỒ THỊ VÀ ỨNG DỤNG",
+            topics: [
+              {
+                title: "HÀM SỐ",
+                lessons: [
+                  { code: "[TO10.06.1.S01]", name: "Tính giá trị của hàm số tại một điểm" },
+                  { code: "[TO10.06.1.S02]", name: "Tìm tập xác định của hàm số" },
+                  { code: "[TO10.06.1.S03]", name: "Xét tính đồng biến, nghịch biến của hàm số" },
+                  { code: "[TO10.06.1.S05]", name: "Toán thực tế, ứng dụng của hàm số" }
+                ]
+              },
+              {
+                title: "HÀM SỐ BẬC HAI",
+                lessons: [
+                  { code: "[TO10.06.2.S01]", name: "Tính đơn điệu của hàm số bậc hai" },
+                  { code: "[TO10.06.2.S02]", name: "Xác định đỉnh và trục đối xứng của đồ thị hàm số bậc hai" },
+                  { code: "[TO10.06.2.S05]", name: "Đồ thị của hàm số bậc hai" },
+                  { code: "[TO10.06.2.S09]", name: "Giá trị lớn nhất - giá trị nhỏ nhất của hàm số bậc hai" },
+                  { code: "[TO10.06.2.S10]", name: "Toán thực tế, ứng dụng của hàm số bậc hai" }
+                ]
+              },
+              {
+                title: "DẤU CỦA TAM THỨC BẬC HAI",
+                lessons: [
+                  { code: "[TO10.06.3.S02]", name: "Xét dấu, bảng xét dấu của 1 tam thức bậc 2" },
+                  { code: "[TO10.06.3.S04]", name: "Phương trình bậc hai luôn có nghiệm hoặc luôn vô nghiệm" },
+                  { code: "[TO10.06.3.S07]", name: "Bài toán thực tế" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH CHỨA CĂN",
+                lessons: [
+                  { code: "[TO10.06.6.S02]", name: "Phương trình căn(A) bằng B" },
+                  { code: "[TO10.06.6.S03]", name: "Phương trình căn(A) bằng căn(B)" },
+                  { code: "[TO10.06.6.S04]", name: "Phương trình vô tỷ - đặt ẩn phụ" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.07",
+            title: "PHƯƠNG PHÁP TỌA ĐỘ TRONG MẶT PHẲNG",
+            topics: [
+              {
+                title: "HỆ TRỤC TOẠ ĐỘ",
+                lessons: [
+                  { code: "[TO10.07.1.S03]", name: "Xác định toạ độ điểm, toạ độ véctơ" },
+                  { code: "[TO10.07.1.S05]", name: "Ba điểm thẳng hàng, hai đường thẳng song song" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH ĐƯỜNG THẲNG",
+                lessons: [
+                  { code: "[TO10.07.2.S02]", name: "Phương trình đường thẳng qua 1 điểm và có 1 VTPT" },
+                  { code: "[TO10.07.2.S04]", name: "Phương trình đường thẳng qua 2 điểm" },
+                  { code: "[TO10.07.2.S13]", name: "Tính khoảng cách từ 1 điểm đến 1 đường thẳng" },
+                  { code: "[TO10.07.2.S14]", name: "Tính góc giữa 2 đường thẳng" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH ĐƯỜNG TRÒN",
+                lessons: [
+                  { code: "[TO10.07.3.S03]", name: "Tìm tọa độ tâm và tính bán kính của đường tròn" },
+                  { code: "[TO10.07.3.S04]", name: "Phương trình đường tròn tâm I và bán kính R" },
+                  { code: "[TO10.07.3.S18]", name: "Viết phương trình tiếp tuyến với đường tròn" }
+                ]
+              },
+              {
+                title: "BA ĐƯỜNG CONIC",
+                lessons: [
+                  { code: "[TO10.07.4.S02]", name: "Nhận dạng phương trình đường Elip" },
+                  { code: "[TO10.07.5.S02]", name: "Nhận dạng phương trình đường Parabol" },
+                  { code: "[TO10.07.6.S02]", name: "Nhận dạng phương trình đường Hypebol" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.08",
+            title: "ĐẠI SỐ TỔ HỢP",
+            topics: [
+              {
+                title: "QUY TẮC CỘNG – QUY TẮC NHÂN",
+                lessons: [
+                  { code: "[TO10.08.1.S01]", name: "Toán chọn (thuần cộng)" },
+                  { code: "[TO10.08.1.S02]", name: "Chọn người, vật (thuần nhân)" }
+                ]
+              },
+              {
+                title: "HOÁN VỊ - CHỈNH HỢP – TỔ HỢP",
+                lessons: [
+                  { code: "[TO10.08.2.S01]", name: "Đếm số (chỉ dùng một loại P hoặc A hoặc C)" },
+                  { code: "[TO10.08.2.S02]", name: "Đếm số (kết hợp P-A-C)" }
+                ]
+              },
+              {
+                title: "NHỊ THỨC NEWTON",
+                lessons: [
+                  { code: "[TO10.08.3.S01]", name: "Khai triển một nhị thức Newton cụ thể" },
+                  { code: "[TO10.08.3.S02]", name: "Tìm hệ số và số hạng trong khai triển" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO10.09",
+            title: "XÁC SUẤT",
+            topics: [
+              {
+                title: "BIẾN CỐ - XÁC SUẤT CỦA BIẾN CỐ",
+                lessons: [
+                  { code: "[TO10.09.1.S01]", name: "Mô tả không gian mẫu, biến cố" },
+                  { code: "[TO10.09.1.S02]", name: "Mối liên hệ giữa các biến cố" },
+                  { code: "[TO10.09.1.S03]", name: "Tính xác suất bằng định nghĩa" }
+                ]
+              }
+            ]
+          }
+        ];
+
+        // ================= DỮ LIỆU TOÁN 11 =================
+        const dataTo11 = [
+          {
+            id: "TO11.01",
+            title: "CHƯƠNG I: LƯỢNG GIÁC",
+            topics: [
+              {
+                title: "GIÁ TRỊ LƯỢNG GIÁC CỦA MỘT CUNG",
+                lessons: [
+                  { code: "[TO11.01.1.S01]", name: "Xét dấu các góc (cung) lượng giác" },
+                  { code: "[TO11.01.1.S02]", name: "Rút gọn biểu thức lượng giác" },
+                  { code: "[TO11.01.1.S03]", name: "Tính giá trị biểu thức lượng giác, khi biết 1 giá trị lượng giác bằng số" },
+                  { code: "[TO11.01.1.S04]", name: "Tính giá trị biểu thức lượng giác theo giá trị lượng giác đơn giản hơn" },
+                  { code: "[TO11.01.1.S05]", name: "Tìm GTLN - GTNN của biểu thức lượng giác" },
+                  { code: "[TO11.01.1.S06]", name: "Đẳng thức lượng giác, biến bởi hệ thức cơ bản" },
+                  { code: "[TO11.01.1.S07]", name: "Toán thực tế, ứng dụng, liên môn" }
+                ]
+              },
+              {
+                title: "CÔNG THỨC LƯỢNG GIÁC",
+                lessons: [
+                  { code: "[TO11.01.2.S01]", name: "Dạng toán áp dụng công thức cộng lượng giác" },
+                  { code: "[TO11.01.2.S02]", name: "Dạng toán áp dụng công thức nhân đôi, công thức hạ bậc" },
+                  { code: "[TO11.01.2.S03]", name: "Dạng toán áp công thức biến tổng thành tích và tích thành tổng" },
+                  { code: "[TO11.01.2.S04]", name: "Dạng công thức nhân ba" },
+                  { code: "[TO11.01.2.S05]", name: "Dạng kết hợp công thức lượng giác" },
+                  { code: "[TO11.01.2.S06]", name: "Dạng tìm GTLN, GTNN của biểu thức lượng giác" },
+                  { code: "[TO11.01.2.S07]", name: "Dạng đẳng thức trong tam giác" },
+                  { code: "[TO11.01.2.S08]", name: "Dạng sử dụng định lý sin và định lý cosin trong tam giác" },
+                  { code: "[TO11.01.2.S09]", name: "Dạng nhận dạng tam giác" },
+                  { code: "[TO11.01.2.S10]", name: "Toán thực tế, ứng dụng, liên môn" }
+                ]
+              },
+              {
+                title: "HÀM SỐ LƯỢNG GIÁC",
+                lessons: [
+                  { code: "[TO11.01.3.S01]", name: "Tập xác định của hàm số lượng giác" },
+                  { code: "[TO11.01.3.S02]", name: "Tính đơn điệu của hàm số lượng giác" },
+                  { code: "[TO11.01.3.S03]", name: "Tính chẵn lẻ của hàm số lượng giác" },
+                  { code: "[TO11.01.3.S04]", name: "Tính tuần hoàn của hàm số lượng giác" },
+                  { code: "[TO11.01.3.S05]", name: "Tập giá trị và Max-Min của hàm số lượng giác" },
+                  { code: "[TO11.01.3.S06]", name: "BBT và đồ thị của HSLG" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH LƯỢNG GIÁC CƠ BẢN",
+                lessons: [
+                  { code: "[TO11.01.4.S01]", name: "Khái niệm phương trình tương đương" },
+                  { code: "[TO11.01.4.S02]", name: "PTLG cơ bản (không cần biến đổi)" },
+                  { code: "[TO11.01.4.S03]", name: "PTLG cơ bản (trên khoảng, đoạn)" },
+                  { code: "[TO11.01.4.S04]", name: "PTLG cơ bản (biến đổi, không điều kiện)" },
+                  { code: "[TO11.01.4.S05]", name: "PTLG cơ bản (có điều kiện)" },
+                  { code: "[TO11.01.4.S06]", name: "PTLG cơ bản có nghiệm thỏa ĐK" },
+                  { code: "[TO11.01.4.S07]", name: "PTLG cơ bản (chọn nghiệm max-min)" },
+                  { code: "[TO11.01.4.S08]", name: "Biểu diễn nghiệm lên đường tròn LG" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH LƯỢNG GIÁC THƯỜNG GẶP",
+                lessons: [
+                  { code: "[TO11.01.5.S01]", name: "PT đại số (bậc n) theo 1 HSLG" },
+                  { code: "[TO11.01.5.S02]", name: "PT cổ điển (a.sinx + b.cosx = c)" },
+                  { code: "[TO11.01.5.S03]", name: "PT đẳng cấp (bậc n) đối với sinx và cosx" },
+                  { code: "[TO11.01.5.S04]", name: "PT đối xứng, phản xứng đối với sinx và cosx" },
+                  { code: "[TO11.01.5.S05]", name: "PTLG đưa được về dạng tích" },
+                  { code: "[TO11.01.5.S06]", name: "PTLG thường gặp (chứa tham số)" },
+                  { code: "[TO11.01.5.S07]", name: "PTLG không mẫu mực" },
+                  { code: "[TO11.01.5.S08]", name: "PTLG giải bằng PP đánh giá, chuyển hệ" },
+                  { code: "[TO11.01.5.S09]", name: "PTLG có nghiệm trên khoảng, đoạn" },
+                  { code: "[TO11.01.5.S10]", name: "Biểu diễn nghiệm lên đường tròn lượng giác" },
+                  { code: "[TO11.01.5.S11]", name: "Bài toán thực tế, liên môn liên quan PTLG" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.02",
+            title: "CHƯƠNG II: DÃY SỐ - CẤP SỐ CỘNG – CẤP SỐ NHÂN",
+            topics: [
+              {
+                title: "DÃY SỐ",
+                lessons: [
+                  { code: "[TO11.02.1.S01]", name: "Bài toán liên quan định nghĩa dãy số" },
+                  { code: "[TO11.02.1.S02]", name: "Xác định các số hạng của dãy số" },
+                  { code: "[TO11.02.1.S03]", name: "Xác định thứ tự của số hạng" },
+                  { code: "[TO11.02.1.S04]", name: "Số hạng tổng quát của dãy số" },
+                  { code: "[TO11.02.1.S05]", name: "Dãy số tăng, dãy số giảm" },
+                  { code: "[TO11.02.1.S06]", name: "Dãy số bị chặn" },
+                  { code: "[TO11.02.1.S07]", name: "Tính tổng hoặc ứng dụng" },
+                  { code: "[TO11.02.1.S08]", name: "Toán thực tế, liên môn về dãy số" }
+                ]
+              },
+              {
+                title: "CẤP SỐ CỘNG",
+                lessons: [
+                  { code: "[TO11.02.2.S01]", name: "Nhận dạng, khai triển cấp số cộng" },
+                  { code: "[TO11.02.2.S02]", name: "Xác định U1, d, n, Un, Sn (cụ thể)" },
+                  { code: "[TO11.02.2.S03]", name: "Xác định Un, Sn (tổng quát)" },
+                  { code: "[TO11.02.2.S04]", name: "Bài toán khác liên quan tổng của CSC" },
+                  { code: "[TO11.02.2.S05]", name: "Điều kiện để dãy số thành CSC" },
+                  { code: "[TO11.02.2.S06]", name: "ĐK để nghiệm pt lập thành CSC" },
+                  { code: "[TO11.02.2.S07]", name: "Toán đố, toán thực tế, liên môn về CSC" }
+                ]
+              },
+              {
+                title: "CẤP SỐ NHÂN",
+                lessons: [
+                  { code: "[TO11.02.3.S01]", name: "Nhận dạng, khai triển cấp số nhân" },
+                  { code: "[TO11.02.3.S02]", name: "Xác định U1, q, n, Un, Sn (cụ thể)" },
+                  { code: "[TO11.02.3.S03]", name: "Xác định Un, Sn (tổng quát)" },
+                  { code: "[TO11.02.3.S04]", name: "Bài toán khác liên quan tổng của CSN" },
+                  { code: "[TO11.02.3.S05]", name: "Điều kiện để dãy số thành CSN" },
+                  { code: "[TO11.02.3.S06]", name: "ĐK để nghiệm pt lập thành CSN" },
+                  { code: "[TO11.02.3.S07]", name: "Toán tổng hợp cả CSC và CSN" },
+                  { code: "[TO11.02.3.S08]", name: "Toán đố, toán thực tế, liên môn về CSN" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.03",
+            title: "CHƯƠNG III: CÁC SỐ ĐẶC TRƯNG ĐO XU THẾ TRUNG TÂM",
+            topics: [
+              {
+                title: "MẪU SỐ LIỆU GHÉP NHÓM",
+                lessons: [
+                  { code: "[TO11.03.1.S01]", name: "Mẫu số liệu ghép nhóm" }
+                ]
+              },
+              {
+                title: "CÁC SỐ ĐẶC TRƯNG ĐO XU THẾ TRUNG TÂM",
+                lessons: [
+                  { code: "[TO11.03.2.S01]", name: "Số trung bình" },
+                  { code: "[TO11.03.2.S02]", name: "Trung vị" },
+                  { code: "[TO11.03.2.S03]", name: "Tứ phân vị" },
+                  { code: "[TO11.03.2.S04]", name: "Mốt" },
+                  { code: "[TO11.03.2.S05]", name: "Bài tập tổng hợp" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.04",
+            title: "CHƯƠNG IV: QUAN HỆ SONG SONG TRONG KHÔNG GIAN",
+            topics: [
+              {
+                title: "ĐƯỜNG THẲNG VÀ MẶT PHẲNG",
+                lessons: [
+                  { code: "[TO11.04.1.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.04.1.S02]", name: "Đọc hình vẽ (quy tắc vẽ hình)" },
+                  { code: "[TO11.04.1.S03]", name: "Đọc hình vẽ (giao tuyến, giao điểm)" },
+                  { code: "[TO11.04.1.S04]", name: "Đọc hình vẽ (thẳng hàng, đồng quy)" },
+                  { code: "[TO11.04.1.S05]", name: "Đọc hình vẽ (thiết diện)" },
+                  { code: "[TO11.04.1.S06]", name: "Mối liên hệ giữa điểm - đường - mặt" },
+                  { code: "[TO11.04.1.S07]", name: "Tìm giao tuyến của 2 mặt phẳng" },
+                  { code: "[TO11.04.1.S08]", name: "Tìm giao điểm của đ.thẳng và mp" },
+                  { code: "[TO11.04.1.S09]", name: "Tìm thiết diện" },
+                  { code: "[TO11.04.1.S10]", name: "Bài toán tính toán hình học" },
+                  { code: "[TO11.04.1.S11]", name: "Bài toán thẳng hàng, đồng quy" },
+                  { code: "[TO11.04.1.S12]", name: "Bài toán quỹ tích, tập hợp" },
+                  { code: "[TO11.04.1.S13]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "HAI ĐƯỜNG THẲNG CHÉO NHAU VÀ SONG SONG",
+                lessons: [
+                  { code: "[TO11.04.2.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.04.2.S02]", name: "Đọc hình vẽ (nhận dạng song song)" },
+                  { code: "[TO11.04.2.S03]", name: "Đọc hình vẽ (giao điểm, giao tuyến)" },
+                  { code: "[TO11.04.2.S04]", name: "Đọc hình vẽ (thiết diện)" },
+                  { code: "[TO11.04.2.S05]", name: "Xác định, chứng minh d song song d’" },
+                  { code: "[TO11.04.2.S06]", name: "Tìm giao tuyến (với d song song d’)" },
+                  { code: "[TO11.04.2.S07]", name: "Tìm giao điểm (với d song song d’)" },
+                  { code: "[TO11.04.2.S08]", name: "Tìm thiết diện (với d song song d’)" },
+                  { code: "[TO11.04.2.S09]", name: "Bài toán quỹ tích (dùng d song song d’)" },
+                  { code: "[TO11.04.2.S10]", name: "Bài toán tính toán hình học" },
+                  { code: "[TO11.04.2.S11]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "ĐƯỜNG THẲNG VÀ MẶT PHẲNG SONG SONG",
+                lessons: [
+                  { code: "[TO11.04.3.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.04.3.S02]", name: "Đọc hình vẽ (nhận dạng song song)" },
+                  { code: "[TO11.04.3.S03]", name: "Đọc hình vẽ (giao tuyến, giao điểm, thiết diện)" },
+                  { code: "[TO11.04.3.S04]", name: "Xác định, chứng minh QH.SS" },
+                  { code: "[TO11.04.3.S05]", name: "Tìm giao tuyến (có QH.SS)" },
+                  { code: "[TO11.04.3.S06]", name: "Tìm giao điểm (có QH.SS)" },
+                  { code: "[TO11.04.3.S07]", name: "Tìm thiết diện (có QH.SS)" },
+                  { code: "[TO11.04.3.S08]", name: "Bài toán quỹ tích (dùng QH.SS)" },
+                  { code: "[TO11.04.3.S09]", name: "Bài toán tính toán hình học" },
+                  { code: "[TO11.04.3.S10]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "HAI MẶT PHẲNG SONG SONG",
+                lessons: [
+                  { code: "[TO11.04.4.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.04.4.S02]", name: "Đọc hình vẽ (nhận dạng song song)" },
+                  { code: "[TO11.04.4.S03]", name: "Đọc hình vẽ (giao tuyến, giao điểm, thiết diện)" },
+                  { code: "[TO11.04.4.S04]", name: "Xác định, chứng minh QH.SS" },
+                  { code: "[TO11.04.4.S05]", name: "Tìm giao tuyến, giao điểm (có QH.SS)" },
+                  { code: "[TO11.04.4.S06]", name: "Tìm thiết diện song song với mp" },
+                  { code: "[TO11.04.4.S07]", name: "Bài toán tính toán hình học" },
+                  { code: "[TO11.04.4.S08]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "PHÉP CHIẾU SONG SONG-HÌNH BIỂU DIỄN",
+                lessons: [
+                  { code: "[TO11.04.5.S01]", name: "Hình biểu diễn qua phép chiếu song song" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.05",
+            title: "CHƯƠNG V: GIỚI HẠN, HÀM SỐ LIÊN TỤC",
+            topics: [
+              {
+                title: "GIỚI HẠN DÃY SỐ",
+                lessons: [
+                  { code: "[TO11.05.1.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.05.1.S02]", name: "Dùng lượng liên hợp" },
+                  { code: "[TO11.05.1.S03]", name: "Dãy phân thức hữu tỷ" },
+                  { code: "[TO11.05.1.S04]", name: "Dãy phân thức (có mũ n)" },
+                  { code: "[TO11.05.1.S05]", name: "Dãy phân thức (chứa căn)" },
+                  { code: "[TO11.05.1.S06]", name: "Dãy không có ẩn số ở mẫu" },
+                  { code: "[TO11.05.1.S07]", name: "Hỏi về quy tắc giới hạn (đáp số vô cực)" },
+                  { code: "[TO11.05.1.S08]", name: "Nguyên lý kẹp" },
+                  { code: "[TO11.05.1.S09]", name: "Cấp số nhân lùi vô hạn" },
+                  { code: "[TO11.05.1.S10]", name: "Toán thực tế, liên môn về giới hạn dãy" }
+                ]
+              },
+              {
+                title: "GIỚI HẠN CỦA HÀM SỐ",
+                lessons: [
+                  { code: "[TO11.05.2.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.05.2.S02]", name: "Thay số x0 trực tiếp" },
+                  { code: "[TO11.05.2.S03]", name: "Dùng lượng liên hợp (tại x0)" },
+                  { code: "[TO11.05.2.S04]", name: "Hàm phân thức (tại x0)" },
+                  { code: "[TO11.05.2.S05]", name: "Hàm không chứa ẩn ở mẫu (tại x0)" },
+                  { code: "[TO11.05.2.S06]", name: "Giới hạn một bên" },
+                  { code: "[TO11.05.2.S07]", name: "Giới hạn tại vô cực" },
+                  { code: "[TO11.05.2.S08]", name: "Giới hạn hàm số lượng giác" },
+                  { code: "[TO11.05.2.S09]", name: "Hỏi về quy tắc giới hạn (đáp số vô cực)" },
+                  { code: "[TO11.05.2.S10]", name: "Toán tổng hợp, thực tế, liên môn" }
+                ]
+              },
+              {
+                title: "HÀM SỐ LIÊN TỤC",
+                lessons: [
+                  { code: "[TO11.05.3.S01]", name: "Xét tính liên tục bằng đồ thị" },
+                  { code: "[TO11.05.3.S02]", name: "Hàm số liên tục tại một điểm" },
+                  { code: "[TO11.05.3.S03]", name: "Hàm số liên tục trên khoảng, đoạn" },
+                  { code: "[TO11.05.3.S04]", name: "Bài toán tham số" },
+                  { code: "[TO11.05.3.S05]", name: "Chứng minh phương trình có nghiệm" },
+                  { code: "[TO11.05.3.S06]", name: "Toán thực tế, liên môn về hàm số liên tục" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.06",
+            title: "CHƯƠNG VI: MŨ VÀ LOGARIT",
+            topics: [
+              {
+                title: "LŨY THỪA",
+                lessons: [
+                  { code: "[TO11.06.1.S01]", name: "Thực hiện phép tính" },
+                  { code: "[TO11.06.1.S02]", name: "Thu gọn biểu thức lũy thừa" },
+                  { code: "[TO11.06.1.S03]", name: "So sánh các lũy thừa" }
+                ]
+              },
+              {
+                title: "HÀM SỐ LŨY THỪA",
+                lessons: [
+                  { code: "[TO11.06.2.S01]", name: "TXĐ của hàm số lũy thừa, hàm vô tỷ" },
+                  { code: "[TO11.06.2.S02]", name: "Tính chất, đồ thị của hàm số lũy thừa" }
+                ]
+              },
+              {
+                title: "LÔGARIT",
+                lessons: [
+                  { code: "[TO11.06.3.S01]", name: "Tính giá trị biểu thức chứa lôgarit" },
+                  { code: "[TO11.06.3.S02]", name: "Các mệnh đề liên quan đến lôgarit" },
+                  { code: "[TO11.06.3.S03]", name: "Biểu diễn lôgarit này theo lôgarit khác" }
+                ]
+              },
+              {
+                title: "HÀM SỐ MŨ - HÀM SỐ LÔGARIT",
+                lessons: [
+                  { code: "[TO11.06.4.S01]", name: "Tìm tập xác định của hàm số" },
+                  { code: "[TO11.06.4.S02]", name: "Sự biến thiên liên quan hàm số mũ" },
+                  { code: "[TO11.06.4.S03]", name: "Đọc đồ thị liên hàm số mũ, lôgarit" },
+                  { code: "[TO11.06.4.S04]", name: "Bài toán lãi suất" },
+                  { code: "[TO11.06.4.S05]", name: "Bài toán thực tế liên môn" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH - BẤT PHƯƠNG TRÌNH MŨ",
+                lessons: [
+                  { code: "[TO11.06.5.S01]", name: "Dạng pt, bpt mũ cơ bản" },
+                  { code: "[TO11.06.5.S02]", name: "PP đưa về cùng cơ số" },
+                  { code: "[TO11.06.5.S03]", name: "PP đặt ẩn phụ" },
+                  { code: "[TO11.06.5.S04]", name: "PP logarit hóa" },
+                  { code: "[TO11.06.5.S05]", name: "Phương pháp phân tích thành tích" },
+                  { code: "[TO11.06.5.S06]", name: "Phương pháp hàm số, đánh giá" },
+                  { code: "[TO11.06.5.S07]", name: "Toán tham số về phương trình mũ" },
+                  { code: "[TO11.06.5.S08]", name: "Bài toán bpt nghiệm đúng với mọi x thuộc K" },
+                  { code: "[TO11.06.5.S09]", name: "Bài toán bpt có nghiệm, vô nghiệm trên K" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH - BẤT PHƯƠNG TRÌNH LÔGARIT",
+                lessons: [
+                  { code: "[TO11.06.6.S01]", name: "Dạng pt, bpt lôgarit cơ bản" },
+                  { code: "[TO11.06.6.S02]", name: "PP đưa về cùng cơ số" },
+                  { code: "[TO11.06.6.S03]", name: "PP đặt ẩn phụ" },
+                  { code: "[TO11.06.6.S04]", name: "PP mũ hóa" },
+                  { code: "[TO11.06.6.S05]", name: "Phương pháp phân tích thành tích" },
+                  { code: "[TO11.06.6.S06]", name: "Phương pháp hàm số, đánh giá" },
+                  { code: "[TO11.06.6.S07]", name: "Toán tham số về phương trình lôgarit" },
+                  { code: "[TO11.06.6.S08]", name: "Bài toán bpt nghiệm đúng với mọi x thuộc K" },
+                  { code: "[TO11.06.6.S09]", name: "Bài toán bpt có nghiệm, vô nghiệm trên K" }
+                ]
+              },
+              {
+                title: "TOÁN TỔNG HỢP VỀ MŨ VÀ LÔGARIT",
+                lessons: [
+                  { code: "[TO11.06.7.S01]", name: "Các bài toán tổng hợp về Mũ và Lôgarit" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.07",
+            title: "CHƯƠNG VII: QUAN HỆ VUÔNG GÓC",
+            topics: [
+              {
+                title: "HAI ĐƯỜNG THẲNG VUÔNG GÓC",
+                lessons: [
+                  { code: "[TO11.07.1.S01]", name: "Câu hỏi lý thuyết" },
+                  { code: "[TO11.07.1.S02]", name: "Đọc hình vẽ (góc, đường thẳng vuông góc,...)" },
+                  { code: "[TO11.07.1.S03]", name: "Góc giữa hai đường thẳng" },
+                  { code: "[TO11.07.1.S04]", name: "Hai đường thẳng vuông góc" },
+                  { code: "[TO11.07.1.S05]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "ĐƯỜNG THẲNG VUÔNG GÓC MẶT PHẲNG",
+                lessons: [
+                  { code: "[TO11.07.2.S01]", name: "Câu hỏi lý thuyết về đường, mặt vuông nhau" },
+                  { code: "[TO11.07.2.S02]", name: "Câu hỏi về QH.VG (cho trước hình vẽ)" },
+                  { code: "[TO11.07.2.S03]", name: "Câu hỏi về góc (cho trước hình vẽ)" },
+                  { code: "[TO11.07.2.S04]", name: "QH.VG trong hình chóp L1 (đáy tam giác, vuông cạnh bên)" },
+                  { code: "[TO11.07.2.S05]", name: "QH.VG trong hình chóp L2 (đáy h.c.n, vuông cạnh bên)" },
+                  { code: "[TO11.07.2.S06]", name: "QH.VG trong hình chóp L3 (đáy h.thoi, vuông cạnh bên)" },
+                  { code: "[TO11.07.2.S07]", name: "QH.VG trong hình chóp L4 (đáy h.thang, vuông cạnh bên)" },
+                  { code: "[TO11.07.2.S08]", name: "QH.VG trong hình chóp L5 (đáy không vuông cạnh bên)" },
+                  { code: "[TO11.07.2.S09]", name: "Góc giữa đường thẳng và mặt phẳng" },
+                  { code: "[TO11.07.2.S10]", name: "Các tính toán độ dài hình học" },
+                  { code: "[TO11.07.2.S11]", name: "Thiết diện vuông góc với đường thẳng" },
+                  { code: "[TO11.07.2.S12]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "PHÉP CHIẾU VUÔNG GÓC. GÓC",
+                lessons: [
+                  { code: "[TO11.07.3.S01]", name: "Phép chiếu vuông góc" },
+                  { code: "[TO11.07.3.S02]", name: "Xác định góc giữa đường thẳng và mặt phẳng" }
+                ]
+              },
+              {
+                title: "HAI MẶT PHẲNG VUÔNG GÓC",
+                lessons: [
+                  { code: "[TO11.07.4.S01]", name: "Câu hỏi lý thuyết về hai mặt phẳng vuông góc" },
+                  { code: "[TO11.07.4.S02]", name: "Câu hỏi về QH.VG (cho trước hình vẽ)" },
+                  { code: "[TO11.07.4.S03]", name: "Câu hỏi về góc (cho trước hình vẽ)" },
+                  { code: "[TO11.07.4.S04]", name: "Góc giữa hai mặt phẳng, góc nhị diện" },
+                  { code: "[TO11.07.4.S05]", name: "QH.VG trong hình chóp L1 (đáy tam giác, vuông cạnh bên)" },
+                  { code: "[TO11.07.4.S06]", name: "QH.VG trong hình chóp L2 (đáy h.c.n, vuông cạnh bên)" },
+                  { code: "[TO11.07.4.S07]", name: "QH.VG trong hình chóp L3 (đáy h.thoi, vuông cạnh bên)" },
+                  { code: "[TO11.07.4.S08]", name: "QH.VG trong hình chóp L4 (đáy h.thang, vuông cạnh bên)" },
+                  { code: "[TO11.07.4.S09]", name: "QH.VG trong hình chóp L5 (mặt đáy vuông mặt bên)" },
+                  { code: "[TO11.07.4.S10]", name: "QH.VG trong hình chóp L6 (hình chóp đều)" },
+                  { code: "[TO11.07.4.S11]", name: "QH.VG trong hình chóp L7 (hình chóp khác)" },
+                  { code: "[TO11.07.4.S12]", name: "QH.VG trong hình hộp chữ nhật, HLP" },
+                  { code: "[TO11.07.4.S13]", name: "QH.VG trong hình lăng trụ đứng (không đều)" },
+                  { code: "[TO11.07.4.S14]", name: "QH.VG trong hình lăng trụ đều" },
+                  { code: "[TO11.07.4.S15]", name: "QH.VG trong hình lăng trụ khác" },
+                  { code: "[TO11.07.4.S16]", name: "Các tính toán độ dài hình học" },
+                  { code: "[TO11.07.4.S17]", name: "Hình chiếu của một đa giác trên mặt phẳng" }
+                ]
+              },
+              {
+                title: "KHOẢNG CÁCH",
+                lessons: [
+                  { code: "[TO11.07.5.S01]", name: "Từ 1 điểm đến 1 đường thẳng" },
+                  { code: "[TO11.07.5.S02]", name: "Từ chân H của đường cao đến mp cắt đường cao" },
+                  { code: "[TO11.07.5.S03]", name: "Từ điểm M (khác H) đến mp cắt đường cao" },
+                  { code: "[TO11.07.5.S04]", name: "Từ 1 điểm đến mp song song (hoặc chứa) đường cao" },
+                  { code: "[TO11.07.5.S05]", name: "Giữa hai đối tượng song song" },
+                  { code: "[TO11.07.5.S06]", name: "Hai đường chéo nhau (vẽ đoạn v.góc chung)" },
+                  { code: "[TO11.07.5.S07]", name: "Hai đường chéo nhau (mượn mặt phẳng)" },
+                  { code: "[TO11.07.5.S08]", name: "Biện luận khoảng cách" },
+                  { code: "[TO11.07.5.S09]", name: "Toán Max-Min về khoảng cách" },
+                  { code: "[TO11.07.5.S10]", name: "Toán thực tế về khoảng cách" }
+                ]
+              },
+              {
+                title: "THỂ TÍCH",
+                lessons: [
+                  { code: "[TO11.07.6.S01]", name: "Khối chóp có một cạnh bên vuông góc với đáy" },
+                  { code: "[TO11.07.6.S02]", name: "Khối chóp có một mặt bên vuông góc với đáy" },
+                  { code: "[TO11.07.6.S03]", name: "Khối chóp đều" },
+                  { code: "[TO11.07.6.S04]", name: "Các khối chóp khác" },
+                  { code: "[TO11.07.6.S05]", name: "Sử dụng định lý tỉ số thể tích" },
+                  { code: "[TO11.07.6.S06]", name: "Khối đa diện cắt ra từ một khối chóp" },
+                  { code: "[TO11.07.6.S07]", name: "Khối chóp cụt" },
+                  { code: "[TO11.07.6.S08]", name: "Khối lăng trụ đứng (không đều)" },
+                  { code: "[TO11.07.6.S09]", name: "Khối lăng trụ đều" },
+                  { code: "[TO11.07.6.S10]", name: "Khối lăng trụ xiên (có một mặt bên vuông góc với đáy)" },
+                  { code: "[TO11.07.6.S11]", name: "Khối lăng trụ xiên khác" },
+                  { code: "[TO11.07.6.S12]", name: "Khối lập phương" },
+                  { code: "[TO11.07.6.S13]", name: "Khối hộp chữ nhật" },
+                  { code: "[TO11.07.6.S14]", name: "Khối hình hộp khác" },
+                  { code: "[TO11.07.6.S15]", name: "Khối lăng trụ khác" },
+                  { code: "[TO11.07.6.S16]", name: "Khối da diện cắt ra từ khối lăng trụ" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.08",
+            title: "CHƯƠNG VIII: CÁC QUY TẮC TÍNH XÁC SUẤT",
+            topics: [
+              {
+                title: "BIẾN CỐ - XÁC SUẤT CỦA BIẾN CỐ",
+                lessons: [
+                  { code: "[TO11.08.1.S01]", name: "Biến cố hợp" },
+                  { code: "[TO11.08.1.S02]", name: "Biến cố giao" },
+                  { code: "[TO11.08.1.S03]", name: "Biến cố độc lập" },
+                  { code: "[TO11.08.1.S04]", name: "Tính xác suất bằng công thức cộng xác suất" },
+                  { code: "[TO11.08.1.S05]", name: "Tính xác suất bằng công thức nhân xác suất" },
+                  { code: "[TO11.08.1.S06]", name: "Toán tổng hợp về hai công thức xác suất" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.09",
+            title: "CHƯƠNG IX: ĐẠO HÀM",
+            topics: [
+              {
+                title: "ĐẠO HÀM",
+                lessons: [
+                  { code: "[TO11.09.1.S01]", name: "Đạo hàm bằng định nghĩa" },
+                  { code: "[TO11.09.1.S02]", name: "Các quy tắc tính đạo hàm" },
+                  { code: "[TO11.09.1.S03]", name: "Tính đạo hàm các cấp" },
+                  { code: "[TO11.09.1.S04]", name: "Mối liên hệ giữa hàm số và đạo hàm các cấp" },
+                  { code: "[TO11.09.1.S05]", name: "Bài toán quãng đường, vận tốc, gia tốc" }
+                ]
+              },
+              {
+                title: "BÀI TOÁN TIẾP TUYẾN CỦA ĐƯỜNG CONG",
+                lessons: [
+                  { code: "[TO11.09.2.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO11.09.2.S02]", name: "Xác định toạ độ tiếp điểm, giao điểm" },
+                  { code: "[TO11.09.2.S03]", name: "Tìm hệ số góc của tiếp tuyến" },
+                  { code: "[TO11.09.2.S04]", name: "Tiếp tuyến tại điểm" },
+                  { code: "[TO11.09.2.S05]", name: "Tiếp tuyến cho sẵn hsg k" },
+                  { code: "[TO11.09.2.S06]", name: "Tiếp tuyến song song" },
+                  { code: "[TO11.09.2.S07]", name: "Tiếp tuyến vuông góc" },
+                  { code: "[TO11.09.2.S08]", name: "Tiếp tuyến đi qua 1 điểm" },
+                  { code: "[TO11.09.2.S09]", name: "Tiếp tuyến thoả ĐK khác" },
+                  { code: "[TO11.09.2.S10]", name: "Tổng hợp tiếp tuyến và kiến thức liên quan" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.10",
+            title: "CHƯƠNG X: HOẠT ĐỘNG TRẢI NGHIỆM",
+            topics: [
+              {
+                title: "HOẠT ĐỘNG TRẢI NGHIỆM",
+                lessons: [
+                  { code: "[TO11.10.1.S01]", name: "Áp dụng Toán học trong tài chính" },
+                  { code: "[TO11.10.1.S02]", name: "Lực căng mặt ngoài" },
+                  { code: "[TO11.10.1.S03]", name: "Mô hình toán học sử dụng hàm số mũ và logarit" },
+                  { code: "[TO11.10.1.S04]", name: "Trải nghiệm hình học" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO11.11",
+            title: "CHƯƠNG XI: CHUYÊN ĐỀ",
+            topics: [
+              {
+                title: "PHÉP BIẾN HÌNH TRONG MẶT PHẲNG",
+                lessons: [
+                  { code: "[TO11.11.1.S01]", name: "Phép biến hình" },
+                  { code: "[TO11.11.1.S02]", name: "Phép tịnh tiến" },
+                  { code: "[TO11.11.1.S03]", name: "Phép đối xứng trục" },
+                  { code: "[TO11.11.1.S04]", name: "Phép quay và phép đối xứng tâm" },
+                  { code: "[TO11.11.1.S05]", name: "Phép dời hình" },
+                  { code: "[TO11.11.1.S06]", name: "Phép vị tự" },
+                  { code: "[TO11.11.1.S07]", name: "Phép đồng dạng" }
+                ]
+              },
+              {
+                title: "LÀM QUEN VỚI LÍ THUYẾT ĐỒ THỊ",
+                lessons: [
+                  { code: "[TO11.11.2.S01]", name: "Một số khái niệm cơ bản" },
+                  { code: "[TO11.11.2.S02]", name: "Đường đi Euler và đường đi Hamilton" },
+                  { code: "[TO11.11.2.S03]", name: "Bài toán tìm đường đi tối ưu" }
+                ]
+              },
+              {
+                title: "MỘT SỐ YẾU TỐ VẼ KĨ THUẬT",
+                lessons: [
+                  { code: "[TO11.11.3.S01]", name: "Hình chiếu vuông góc và hình chiếu trục đo" },
+                  { code: "[TO11.11.3.S02]", name: "Bản vẽ kĩ thuật" }
+                ]
+              }
+            ]
+          }
+        ];
+
+        // ================= DỮ LIỆU TOÁN 12 =================
+        const dataTo12 = [
+          {
+            id: "TO12.01",
+            title: "CHƯƠNG I: ỨNG DỤNG ĐẠO HÀM (TÓM TẮT)",
+            topics: [
+              {
+                title: "TÍNH ĐƠN ĐIỆU",
+                lessons: [
+                  { code: "[TO12.01.1.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.1.S02]", name: "Lý thuyết về tính đơn điệu của hàm số" },
+                  { code: "[TO12.01.1.S03]", name: "Nhận dạng BBT, nhận dạng hàm số" },
+                  { code: "[TO12.01.1.S04]", name: "Xét tính đơn điệu của hàm số (Biết đồ thị, BBT)" },
+                  { code: "[TO12.01.1.S05]", name: "Xét tính đơn điệu của hàm số (biết y, y’)" },
+                  { code: "[TO12.01.1.S06]", name: "Điều kiện để hàm số bậc ba đơn điệu trên khoảng K" },
+                  { code: "[TO12.01.1.S07]", name: "Điều kiện để hàm số - nhất biến đơn điệu trên khoảng K" },
+                  { code: "[TO12.01.1.S08]", name: "Điều kiện để hàm số trùng phương đơn điệu trên khoảng K" },
+                  { code: "[TO12.01.1.S09]", name: "Điều kiên để hàm số phân thức (khác) đơn điệu trên khoảng K" },
+                  { code: "[TO12.01.1.S10]", name: "Điều kiện để hàm số lượng giác đơn điệu trên khoảng K" },
+                  { code: "[TO12.01.1.S11]", name: "Điều kiện để hàm số vô tỷ, hàm số khác đơn điệu trên K" },
+                  { code: "[TO12.01.1.S12]", name: "Ứng dụng phương pháp hàm số vào đại số" },
+                  { code: "[TO12.01.1.S13]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "CỰC TRỊ",
+                lessons: [
+                  { code: "[TO12.01.2.S01]", name: "Dạng toán khác về cực trị" },
+                  { code: "[TO12.01.2.S02]", name: "Lý thuyết về cực trị của hàm số" },
+                  { code: "[TO12.01.2.S03]", name: "Nhận dạng BBT, nhận dạng hàm số" },
+                  { code: "[TO12.01.2.S04]", name: "Đếm số điểm cực trị (Biết đồ thị, BBT)" },
+                  { code: "[TO12.01.2.S05]", name: "Đếm số điểm cực trị (Biết y, y’)" },
+                  { code: "[TO12.01.2.S06]", name: "Tìm cực trị, điểm cực trị (Biết đồ thị, BBT)" },
+                  { code: "[TO12.01.2.S07]", name: "Tìm cực trị, điểm cực trị (Biết y,y’)" },
+                  { code: "[TO12.01.2.S08]", name: "Điều kiện để hàm số có cực trị" },
+                  { code: "[TO12.01.2.S09]", name: "Điều kiện để hàm số có cực trị tại xo (cụ thể)" },
+                  { code: "[TO12.01.2.S10]", name: "Điều kiện để hàm số có cực trị, kèm giả thiết (theo x)" },
+                  { code: "[TO12.01.2.S11]", name: "Điều kiện để hàm số có cực trị, kem giả thiết (theo y)" },
+                  { code: "[TO12.01.2.S12]", name: "Đường thẳng nối 2 điểm cực trị (đồ thị hàm số bậc ba)" },
+                  { code: "[TO12.01.2.S13]", name: "Đường thẳng nối 2 điểm cực trị (đồ thị hàm phân thức)" },
+                  { code: "[TO12.01.2.S14]", name: "Điều kiện hình học về 2 điểm cực trị (hàm bậc ba)" },
+                  { code: "[TO12.01.2.S15]", name: "Điều kiện hình học về tam giác cực trị (hàm trùng phương)" },
+                  { code: "[TO12.01.2.S16]", name: "Câu hỏi tổng hợp về tính đơn điệu và cực trị" }
+                ]
+              },
+              {
+                title: "MAX MIN",
+                lessons: [
+                  { code: "[TO12.01.3.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.3.S02]", name: "Max-Min biết đồ thị, BBT" },
+                  { code: "[TO12.01.3.S03]", name: "Max-Min của hàm số đa thức trên đoạn [a,b]" },
+                  { code: "[TO12.01.3.S04]", name: "Max-Min của hàm số đa thức trên K" },
+                  { code: "[TO12.01.3.S05]", name: "Max-Min của hàm phân thức trên đoạn [a,b]" },
+                  { code: "[TO12.01.3.S06]", name: "Max-Min của hàm phân thức trên K" },
+                  { code: "[TO12.01.3.S07]", name: "Max-Min của hàm số vô tỉ trên [a,b]" },
+                  { code: "[TO12.01.3.S08]", name: "Max-Min của hàm lượng giác trên đoạn [a,b]" },
+                  { code: "[TO12.01.3.S09]", name: "Max-Min của hàm số khác trên K" },
+                  { code: "[TO12.01.3.S10]", name: "Max-Min hàm số chứa dấu trị tuyệt đối" },
+                  { code: "[TO12.01.3.S11]", name: "Max-Min của hàm số dùng BĐT cổ điển" },
+                  { code: "[TO12.01.3.S12]", name: "Bài toán tham số về Max-Min" },
+                  { code: "[TO12.01.3.S13]", name: "Max-Min của biểu thức nhiều biến" },
+                  { code: "[TO12.01.3.S14]", name: "Ứng dụng Max-Min giải toán tham số" },
+                  { code: "[TO12.01.3.S15]", name: "Bài toán thực tế, liên môn về Max-Min" },
+                  { code: "[TO12.01.3.S16]", name: "Câu hỏi tổng hợp đơn điệu, cực trị và Max-Min" }
+                ]
+              },
+              {
+                title: "TIỆM CẬN",
+                lessons: [
+                  { code: "[TO12.01.4.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.4.S02]", name: "Lý thuyết về đường tiệm cận" },
+                  { code: "[TO12.01.4.S03]", name: "Nhận dạng BBT, nhận dạng hàm số" },
+                  { code: "[TO12.01.4.S04]", name: "Tìm đường tiệm cận (biết BBT, đồ thị)" },
+                  { code: "[TO12.01.4.S05]", name: "Tìm đường tiệm cận (biết y)" },
+                  { code: "[TO12.01.4.S06]", name: "Đếm số tiệm cận (Biết BBT, đồ thị)" },
+                  { code: "[TO12.01.4.S07]", name: "Đếm số tiệm cận (biết y)" },
+                  { code: "[TO12.01.4.S08]", name: "Biện luận số đường tiệm cận" },
+                  { code: "[TO12.01.4.S09]", name: "Tiệm cận thỏa mãn điều kiện" },
+                  { code: "[TO12.01.4.S10]", name: "Tổng hợp tiệm cận với diện tích, góc, khoảng cách" },
+                  { code: "[TO12.01.4.S11]", name: "Bài toán thực tế" }
+                ]
+              },
+              {
+                title: "ĐỌC ĐỒ THỊ - BIẾN ĐỔI ĐỒ THỊ",
+                lessons: [
+                  { code: "[TO12.01.5.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.5.S02]", name: "Nhận dạng 3 hàm số thường gặp (biết đồ thị, BBT)" },
+                  { code: "[TO12.01.5.S03]", name: "Nhận dạng 3 đồ thị thường gặp (biết hàm số)" },
+                  { code: "[TO12.01.5.S04]", name: "Xét dấu hệ số của biểu thức (biết đồ thị, BBT)" },
+                  { code: "[TO12.01.5.S05]", name: "Tính giá trị biểu thức (biết đồ thị)" },
+                  { code: "[TO12.01.5.S06]", name: "Đọc đồ thị của đạo hàm (các cấp)" },
+                  { code: "[TO12.01.5.S07]", name: "Nhận dạng hàm số chứa dấu trị tuyệt đối (biết đồ thị)" },
+                  { code: "[TO12.01.5.S08]", name: "Nhận dạng đồ thị (biết hàm số chứa dấu trị tuyệt đối)" },
+                  { code: "[TO12.01.5.S09]", name: "Biến đổi đồ thị bằng phép tịnh tiến" },
+                  { code: "[TO12.01.5.S10]", name: "Câu hỏi giải bằng hình dáng của đồ thị" },
+                  { code: "[TO12.01.5.S11]", name: "Tổng hợp các phép biến đổi đồ thị" },
+                  { code: "[TO12.01.5.S12]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "TƯƠNG GIAO – ĐIỀU KIỆN CÓ NGHIỆM",
+                lessons: [
+                  { code: "[TO12.01.6.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.6.S02]", name: "Tìm tọa độ (đếm) giao điểm" },
+                  { code: "[TO12.01.6.S03]", name: "Đếm số nghiệm pt cụ thể (cho đồ thị, BBT)" },
+                  { code: "[TO12.01.6.S04]", name: "Điều kiện để f(x)=g(m) có n- nghiệm (không chứa trị tuyệt đối)" },
+                  { code: "[TO12.01.6.S05]", name: "Điều kiện để f(x)=g(m) có n- nghiệm (chứa trị tuyệt đối)" },
+                  { code: "[TO12.01.6.S06]", name: "Điều kiện để f(x)=g(m) có n- nghiệm thuộc K (không chứa trị tuyệt đối)" },
+                  { code: "[TO12.01.6.S07]", name: "Điều kiện để f(x)=g(m) có n- nghiệm thuộc K (chứa trị tuyệt đối)" },
+                  { code: "[TO12.01.6.S08]", name: "Điều kiên để bpt có nghiệm, vn, nghiệm đúng trên K" },
+                  { code: "[TO12.01.6.S09]", name: "Điều kiên để (C) và d cắt nhau tại n-điểm" },
+                  { code: "[TO12.01.6.S10]", name: "Đồ thị hàm bậc ba cắt d, thỏa mãn điều kiện theo x" },
+                  { code: "[TO12.01.6.S11]", name: "Đồ thị hàm bậc 3 cắt d, thỏa mãn điều kiện theo y" },
+                  { code: "[TO12.01.6.S12]", name: "Đồ thị hàm bậc 3 cắt d, thỏa đk hình học" },
+                  { code: "[TO12.01.6.S13]", name: "Đồ thị hàm nhất biến cắt d, thỏa mãn đk theo x" },
+                  { code: "[TO12.01.6.S14]", name: "Đồ thị hàm nhất biến cắt d, thỏa mãn đk theo y" },
+                  { code: "[TO12.01.6.S15]", name: "Đồ thị hàm nhất biến cắt d, thỏa đk hình học" },
+                  { code: "[TO12.01.6.S16]", name: "Đồ thị hàm trùng phương cắt d, thỏa đk theo x" },
+                  { code: "[TO12.01.6.S17]", name: "Đồ thị hàm trùng phương cắt d, thỏa đk theo y" },
+                  { code: "[TO12.01.6.S18]", name: "Đồ thị hàm trùng phương cắt d, thỏa đk hình học" },
+                  { code: "[TO12.01.6.S19]", name: "Liên hệ giữa sự tương giao và cực trị" }
+                ]
+              },
+              {
+                title: "BÀI TOÁN TIẾP TUYẾN, SỰ TIẾP XÚC",
+                lessons: [
+                  { code: "[TO12.01.7.S01]", name: "Câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.7.S02]", name: "Các bài toán tiếp tuyến (không tham số)" },
+                  { code: "[TO12.01.7.S03]", name: "Các bài toán tiếp tuyến (có tham số)" }
+                ]
+              },
+              {
+                title: "ĐIỂM ĐẶC BIỆT CỦA ĐỒ THỊ HÀM SỐ",
+                lessons: [
+                  { code: "[TO12.01.8.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.8.S02]", name: "Tìm điểm thuộc đồ thị thỏa mãn điều kiện" },
+                  { code: "[TO12.01.8.S03]", name: "Đồ thị hàm số đi qua điểm cho trước" },
+                  { code: "[TO12.01.8.S04]", name: "Điểm cố định của họ đồ thị" },
+                  { code: "[TO12.01.8.S05]", name: "Cặp điểm đối xứng" },
+                  { code: "[TO12.01.8.S06]", name: "Điểm có tọa độ nguyên" },
+                  { code: "[TO12.01.8.S07]", name: "Tìm tập hợp điểm" },
+                  { code: "[TO12.01.8.S08]", name: "Đếm số điểm cực trị (Biết đồ thị, BBT full)" },
+                  { code: "[TO12.01.8.S09]", name: "Đếm số nghiệm pt cụ thể (cho đồ thị, BBT fulll)" }
+                ]
+              },
+              {
+                title: "TOÁN TỔNG HỢP VỀ HÀM SỐ",
+                lessons: [
+                  { code: "[TO12.01.9.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.01.9.S02]", name: "Các bài toán tổng hợp về hàm số" },
+                  { code: "[TO12.01.9.S03]", name: "Điều kiện để hàm số có cực trị (full)" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.02",
+            title: "CHƯƠNG II: VECTƠ TRONG KHÔNG GIAN",
+            topics: [
+              {
+                title: "VECTƠ TRONG KHÔNG GIAN",
+                lessons: [
+                  { code: "[TO12.02.1.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.02.1.S02]", name: "Xác định véctơ và khái niệm liên quan" },
+                  { code: "[TO12.02.1.S03]", name: "Đẳng thức véctơ không liên quan trung điểm, trọng tâm" },
+                  { code: "[TO12.02.1.S04]", name: "Đẳng thức véctơ (liên quan trung điểm, trọng tâm)" },
+                  { code: "[TO12.02.1.S05]", name: "Phân tích véctơ theo các véctơ cho trước" },
+                  { code: "[TO12.02.1.S06]", name: "ĐK đồng phẳng của các véctơ (PP véctơ)" },
+                  { code: "[TO12.02.1.S07]", name: "ĐK đồng phẳng của các véctơ (thuần hình học)" },
+                  { code: "[TO12.02.1.S08]", name: "Tích vô hướng" },
+                  { code: "[TO12.02.1.S09]", name: "Các bài toán tính toán chiều dài" },
+                  { code: "[TO12.02.1.S10]", name: "Toán Max-Min liên quan đến véctơ" },
+                  { code: "[TO12.02.1.S11]", name: "Toán thực tế" }
+                ]
+              },
+              {
+                title: "HỆ TRỤC TỌA ĐỘ",
+                lessons: [
+                  { code: "[TO12.02.2.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.02.2.S02]", name: "Tìm tọa độ điểm, tọa độ vec tơ thỏa đk cho trước" },
+                  { code: "[TO12.02.2.S03]", name: "Tính độ dài đoạn thẳng" },
+                  { code: "[TO12.02.2.S04]", name: "Xét sự cùng phương, sự đồng phẳng" },
+                  { code: "[TO12.02.2.S05]", name: "Bài toán về tích vô hướng, góc" },
+                  { code: "[TO12.02.2.S06]", name: "Bài toán về tích có hướng" },
+                  { code: "[TO12.02.2.S07]", name: "Toán thực tế" },
+                  { code: "[TO12.02.2.S08]", name: "Giải hình không gian bằng phương pháp tọa độ hóa" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.03",
+            title: "CHƯƠNG III: CÁC SỐ ĐẶC TRƯNG ĐO MỨC ĐỘ PHÂN TÁN",
+            topics: [
+              {
+                title: "§9. SĐT ĐO ĐỘ PHÂN TÁN CỦA MSL GHÉP NHÓM",
+                lessons: [
+                  { code: "[TO12.03.1.S01]", name: "Câu hỏi lí thuyết" },
+                  { code: "[TO12.03.1.S02]", name: "Khoảng biến thiên và khoảng tứ phân vị" },
+                  { code: "[TO12.03.1.S03]", name: "Phương sai và độ lệch chuẩn" },
+                  { code: "[TO12.03.1.S04]", name: "Bài toán tổng hợp" },
+                  { code: "[TO12.03.1.S05]", name: "Bài toán thực tế" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.04",
+            title: "CHƯƠNG IV: NGUYÊN HÀM, TÍCH PHÂN VÀ ỨNG DỤNG",
+            topics: [
+              {
+                title: "NGUYÊN HÀM CƠ BẢN",
+                lessons: [
+                  { code: "[TO12.04.1.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.1.S02]", name: "Các câu hỏi lý thuyết" },
+                  { code: "[TO12.04.1.S03]", name: "Câu hỏi giải bằng định nghĩa" },
+                  { code: "[TO12.04.1.S04]", name: "Công thức nguyên hàm cơ bản, mở rộng" },
+                  { code: "[TO12.04.1.S05]", name: "Tổng, hiệu, tích với số của các hàm đơn giản" },
+                  { code: "[TO12.04.1.S06]", name: "Hàm phân thức (chỉ biến đổi, không đặt)" },
+                  { code: "[TO12.04.1.S07]", name: "Hàm lượng giác (chỉ cần biến đổi, không đặt)" },
+                  { code: "[TO12.04.1.S08]", name: "Nguyên hàm có điều kiện (chỉ biến đổi)" },
+                  { code: "[TO12.04.1.S09]", name: "Bài toán thực tế" }
+                ]
+              },
+              {
+                title: "PHƯƠNG PHÁP TÌM NGUYÊN HÀM",
+                lessons: [
+                  { code: "[TO12.04.2.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.2.S02]", name: "Thể hiện quy tắc đổi biến (cho sẵn phép đặt t)" },
+                  { code: "[TO12.04.2.S03]", name: "Thể hiện quy tắc nguyên hàm từng phần" },
+                  { code: "[TO12.04.2.S04]", name: "Đổi biến t không qua biến đổi (dt có sẵn)" },
+                  { code: "[TO12.04.2.S05]", name: "Đổi biến t sau khi biến đổi (dt bị ẩn)" },
+                  { code: "[TO12.04.2.S06]", name: "Đổi biến bằng phép lượng giác hóa" },
+                  { code: "[TO12.04.2.S07]", name: "PP từng phần với (u=đa thức)" },
+                  { code: "[TO12.04.2.S08]", name: "PP từng phần với (u= lôgarit)" },
+                  { code: "[TO12.04.2.S09]", name: "PP từng phần xoay vòng" },
+                  { code: "[TO12.04.2.S10]", name: "Kết hợp biến đổi, đổi biến, từng phần" },
+                  { code: "[TO12.04.2.S11]", name: "Nguyên hàm có điều kiện (dùng đổi biến)" },
+                  { code: "[TO12.04.2.S12]", name: "Nguyên hàm có điều kiện (PP từng phần)" },
+                  { code: "[TO12.04.2.S13]", name: "Nguyên hàm có điều kiện (tổng hợp PP)" }
+                ]
+              },
+              {
+                title: "TÍCH PHÂN CƠ BẢN",
+                lessons: [
+                  { code: "[TO12.04.3.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.3.S02]", name: "Các câu hỏi lý thuyết" },
+                  { code: "[TO12.04.3.S03]", name: "Câu hỏi giải bằng định nghĩa, ý nghĩa HH" },
+                  { code: "[TO12.04.3.S04]", name: "Sử dụng nguyên hàm cơ bản, mở rộng" },
+                  { code: "[TO12.04.3.S05]", name: "Tổng, hiệu, tích với số của các hàm đơn giản" },
+                  { code: "[TO12.04.3.S06]", name: "Hàm phân thức (chỉ biến đổi, không đặt)" },
+                  { code: "[TO12.04.3.S07]", name: "Hàm lượng giác (Chỉ cần biến đổi, không đặt)" },
+                  { code: "[TO12.04.3.S08]", name: "Phương pháp chia khoảng, hàm nhiều công thức" }
+                ]
+              },
+              {
+                title: "PHƯƠNG PHÁP TÍNH TÍCH PHÂN",
+                lessons: [
+                  { code: "[TO12.04.4.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.4.S02]", name: "Thể hiện quy tắc đổi biến (cho sẵn phép đặt t)" },
+                  { code: "[TO12.04.4.S03]", name: "Thể hiện quy tắc nguyên hàm từng phần" },
+                  { code: "[TO12.04.4.S04]", name: "Đổi biến t không qua biến đổi (dt có sẵn)" },
+                  { code: "[TO12.04.4.S05]", name: "Đổi biến t sau khu biến đổi (dt bị ẩn)" },
+                  { code: "[TO12.04.4.S06]", name: "Đổi biến bằng phương pháp lượng giác hóa" },
+                  { code: "[TO12.04.4.S07]", name: "PP từng phần với (u=đa thức)" },
+                  { code: "[TO12.04.4.S08]", name: "PP từng phần với (u= lôgarit)" },
+                  { code: "[TO12.04.4.S09]", name: "PP từng phần xoay vòng" },
+                  { code: "[TO12.04.4.S10]", name: "Kết hợp biến đổi, đổi biến, từng phần" },
+                  { code: "[TO12.04.4.S11]", name: "Kỹ thuật riêng của hàm phân thức (có đặt)" },
+                  { code: "[TO12.04.4.S12]", name: "Kỹ thuật riêng của hàm lượng giác (có đặt)" },
+                  { code: "[TO12.04.4.S13]", name: "Tích phân đặc biệt (hàm chẵn, lẻ, tuần hoàn…)" }
+                ]
+              },
+              {
+                title: "ỨNG DỤNG HÌNH HỌC CỦA TÍCH PHÂN",
+                lessons: [
+                  { code: "[TO12.04.5.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.5.S02]", name: "Câu hỏi lý thuyết về ứng dụng hình học của tích phân" },
+                  { code: "[TO12.04.5.S03]", name: "Xây dựng công thức tính diện tích theo hình vẽ" },
+                  { code: "[TO12.04.5.S04]", name: "Xây dựng công thức tính thể tích theo hình vẽ" },
+                  { code: "[TO12.04.5.S05]", name: "Diện tích hình phẳng y=f(x), Ox" },
+                  { code: "[TO12.04.5.S06]", name: "Diện tích hình phẳng y=f(x), y=g(x)" },
+                  { code: "[TO12.04.5.S07]", name: "Diện tích hình phẳng y=f(x), y=g(x), y=h(x)" },
+                  { code: "[TO12.04.5.S08]", name: "Diện tích hình phẳng dựa vào đồ thị" },
+                  { code: "[TO12.04.5.S09]", name: "Thể tích vật thể, biết mặt cắt" },
+                  { code: "[TO12.04.5.S10]", name: "Thể tích vật thể tròn xoay y=f(x), Ox (quanh Ox)" },
+                  { code: "[TO12.04.5.S11]", name: "Thể tích vật thể tròn xoay y=f(x), y=g(x),…(quanh Ox)" },
+                  { code: "[TO12.04.5.S12]", name: "Thể tích vật thể tròn xoay (quay quanh Oy)" },
+                  { code: "[TO12.04.5.S13]", name: "Câu hỏi liên hệ giữa giá trị hàm và diện tích hình phẳng" },
+                  { code: "[TO12.04.5.S14]", name: "Bài toán thực tế (gắn hệ trục, tìm đường cong…)" },
+                  { code: "[TO12.04.5.S15]", name: "Các bài toán thực tế khác" }
+                ]
+              },
+              {
+                title: "ỨNG DỤNG LIÊN MÔN",
+                lessons: [
+                  { code: "[TO12.04.6.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.04.6.S02]", name: "Liên môn với vật lý" },
+                  { code: "[TO12.04.6.S03]", name: "Diện tích hình phẳng dựa vào đồ thị (full)" },
+                  { code: "[TO12.04.6.S04]", name: "Các câu hỏi lý thuyết (full)" },
+                  { code: "[TO12.04.6.S05]", name: "Bài toán thực tế (gắn hệ trục, tìm đường cong… full)" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.05",
+            title: "CHƯƠNG V: PP TỌA ĐỘ TRONG KHÔNG GIAN",
+            topics: [
+              {
+                title: "PT MẶT PHẲNG (Chưa học PTĐT)",
+                lessons: [
+                  { code: "[TO12.05.1.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.1.S02]", name: "Tìm VTPT, các vấn đề về lý thuyết" },
+                  { code: "[TO12.05.1.S03]", name: "PTMP trung trực của đoạn thẳng" },
+                  { code: "[TO12.05.1.S04]", name: "PTMP qua 1 điểm, dễ tìm VTPT (không dùng tích có hướng)" },
+                  { code: "[TO12.05.1.S05]", name: "PTMP qua 1 điểm, VTPT tìm bằng tích có hướng" },
+                  { code: "[TO12.05.1.S06]", name: "PTMP qua 1 điểm, tiếp xúc với mặt cầu" },
+                  { code: "[TO12.05.1.S07]", name: "PTMP qua 1 điểm, cắt mặt cầu" },
+                  { code: "[TO12.05.1.S08]", name: "PTMP qua 1 điểm, thỏa ĐK về góc, khoảng cách" },
+                  { code: "[TO12.05.1.S09]", name: "PTMP qua 1 điểm, thỏa ĐK khác" },
+                  { code: "[TO12.05.1.S10]", name: "PTMP qua 2 điểm, VTPT tìm bằng tích có hướng" },
+                  { code: "[TO12.05.1.S11]", name: "PTMP qua 2 điểm, thỏa ĐK về góc, khoảng cách" },
+                  { code: "[TO12.05.1.S12]", name: "PTMP qua 2 điểm, thỏa ĐK khác" },
+                  { code: "[TO12.05.1.S13]", name: "PTMP qua 3 điểm không thẳng hàng" },
+                  { code: "[TO12.05.1.S14]", name: "PTMP theo đoạn chắn" },
+                  { code: "[TO12.05.1.S15]", name: "PTMP song song với mp, thỏa ĐK" }
+                ]
+              },
+              {
+                title: "PT MẶT PHẲNG (Có sử dụng PTĐT)",
+                lessons: [
+                  { code: "[TO12.05.2.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.2.S02]", name: "Tìm VTPT, các vấn đề về lý thuyết" },
+                  { code: "[TO12.05.2.S03]", name: "PTMP qua 1 điểm, dễ tìm VTPT (không dùng tích có hướng)" },
+                  { code: "[TO12.05.2.S04]", name: "PTMP qua 1 điểm, VTPT tìm bằng tích có hướng (đường-mặt)" },
+                  { code: "[TO12.05.2.S05]", name: "PTMP qua 1 điểm và chứa đường thẳng" },
+                  { code: "[TO12.05.2.S06]", name: "PTMP qua 1 điểm, thỏa ĐK khác" },
+                  { code: "[TO12.05.2.S07]", name: "PTMP qua 2 điểm, VTPT tìm bằng tích có hướng" },
+                  { code: "[TO12.05.2.S08]", name: "PTMP qua 2 điểm, thỏa ĐK về góc, khoảng cách" },
+                  { code: "[TO12.05.2.S09]", name: "PTMP qua 2 điểm, thỏa ĐK khác" },
+                  { code: "[TO12.05.2.S10]", name: "PTMP chứa 1 đường thẳng, thỏa ĐK với đường thẳng khác" },
+                  { code: "[TO12.05.2.S11]", name: "PTMP chứa 1 đường thẳng, thỏa ĐK với mặt phẳng" },
+                  { code: "[TO12.05.2.S12]", name: "PTMP chứa 1 đường thẳng, thỏa ĐK về góc, khoảng cách" },
+                  { code: "[TO12.05.2.S13]", name: "PTMP chứa 1 đường thẳng, thỏa ĐK với mặt cầu" },
+                  { code: "[TO12.05.2.S14]", name: "PTMP theo đoạn chắn thỏa ĐK với đường thẳng" },
+                  { code: "[TO12.05.2.S15]", name: "PTMP song song với mp, thỏa ĐK" },
+                  { code: "[TO12.05.2.S16]", name: "PTMP thỏa ĐK đối xứng" },
+                  { code: "[TO12.05.2.S17]", name: "Toán Max-Min liên quan đến mặp phẳng" },
+                  { code: "[TO12.05.2.S18]", name: "Điểm thuộc mặt phẳng thỏa ĐK" },
+                  { code: "[TO12.05.2.S19]", name: "Bài toán thực tế, liên môn liên quan PTMP" },
+                  { code: "[TO12.05.2.S20]", name: "Phương pháp tọa độ trong mặt phẳng" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH ĐƯỜNG THẲNG",
+                lessons: [
+                  { code: "[TO12.05.3.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.3.S02]", name: "Tìm VTCP, các vấn đề về lý thuyết" },
+                  { code: "[TO12.05.3.S03]", name: "PTĐT qua 1 điểm, dễ tìm VTCP (không dùng t.c.h)" },
+                  { code: "[TO12.05.3.S04]", name: "PTĐT qua 1 điểm, VTCP tìm bằng t.c.h (cho 2 mp)" },
+                  { code: "[TO12.05.3.S05]", name: "PTĐT qua 1 điểm, VTCP tìm bằng t.c.h (cho 2 đt)" },
+                  { code: "[TO12.05.3.S06]", name: "PTĐT qua 1 điểm, VTCP tìm bằng t.c.h (cho đt+mp)" },
+                  { code: "[TO12.05.3.S07]", name: "PTĐT qua 1 điểm, cắt d1, có liên hệ với d2" },
+                  { code: "[TO12.05.3.S08]", name: "PTĐT qua 1 điểm, cắt d, có liên hệ với mp (P)" },
+                  { code: "[TO12.05.3.S09]", name: "PTĐT qua 1 điểm, cắt d1 lẫn d2" },
+                  { code: "[TO12.05.3.S10]", name: "PTĐT qua 1 điểm, vừa cắt – vừa vuông góc với d" },
+                  { code: "[TO12.05.3.S11]", name: "PTĐT qua 1 điểm, vuông góc với d, thỏa ĐK khoảng cách" },
+                  { code: "[TO12.05.3.S12]", name: "PTĐT qua 1 điểm, thỏa ĐK khác" },
+                  { code: "[TO12.05.3.S13]", name: "PTĐT cắt 2 đường thẳng d1,d2, thỏa ĐK khác" },
+                  { code: "[TO12.05.3.S14]", name: "PTĐT nằm trong (P), vừa cắt vừa vuông góc với d" },
+                  { code: "[TO12.05.3.S15]", name: "PTĐT thỏa ĐK đối xứng" },
+                  { code: "[TO12.05.3.S16]", name: "PT giao tuyến của 2 mặt phẳng" },
+                  { code: "[TO12.05.3.S17]", name: "PT đường vuông góc chung của hai đường thẳng chéo nhau" },
+                  { code: "[TO12.05.3.S18]", name: "PT hình chiếu vuông góc của d lên (P)" },
+                  { code: "[TO12.05.3.S19]", name: "Toán Max-Min liên quan đến đường thẳng" },
+                  { code: "[TO12.05.3.S20]", name: "Điểm thuộc đường thẳng thỏa ĐK" },
+                  { code: "[TO12.05.3.S21]", name: "Bài toán thực tế liên môn liên quan PTĐT" }
+                ]
+              },
+              {
+                title: "PHƯƠNG TRÌNH MẶT CẦU",
+                lessons: [
+                  { code: "[TO12.05.4.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.4.S02]", name: "Tìm tâm và bán kính, ĐK xác định mặt cầu" },
+                  { code: "[TO12.05.4.S03]", name: "PTMC biết tâm, dễ tính bán kính (Chưa học PTMP)" },
+                  { code: "[TO12.05.4.S04]", name: "PTMC biết 2 đầu mút của đường kính" },
+                  { code: "[TO12.05.4.S05]", name: "PTMC ngoại tiếp tứ diện" },
+                  { code: "[TO12.05.4.S06]", name: "PTMC qua nhiều điểm, thỏa ĐK" },
+                  { code: "[TO12.05.4.S07]", name: "PTMC biết tâm, tiếp xúc với mặt phẳng" },
+                  { code: "[TO12.05.4.S08]", name: "PTMC biết tâm và đường tròn trên nó" },
+                  { code: "[TO12.05.4.S09]", name: "PTMC biết tâm và ĐK của dây cung" },
+                  { code: "[TO12.05.4.S10]", name: "PTMC biết tâm thuộc d, thỏa ĐK" },
+                  { code: "[TO12.05.4.S11]", name: "PTMC biết tâm thuộc mặt phẳng, thỏa ĐK" },
+                  { code: "[TO12.05.4.S12]", name: "PTMC biết tâm, thỏa ĐK khác" },
+                  { code: "[TO12.05.4.S13]", name: "PTMC thỏa mãn ĐK đối xứng" },
+                  { code: "[TO12.05.4.S14]", name: "Toán Max-Min liên quan đến mặt cầu" },
+                  { code: "[TO12.05.4.S15]", name: "Điểm thuộc mặt cầu thỏa ĐK" },
+                  { code: "[TO12.05.4.S16]", name: "Toán thực tế, liên môn liên quan PTMC" }
+                ]
+              },
+              {
+                title: "TOÁN TỔNG HỢP VỀ PP TỌA ĐỘ KHÔNG GIAN",
+                lessons: [
+                  { code: "[TO12.05.5.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.5.S02]", name: "Xét VTTĐ giữa 2 mp" },
+                  { code: "[TO12.05.5.S03]", name: "Xét VTTĐ giữa 2 đt" },
+                  { code: "[TO12.05.5.S04]", name: "Xét VTTĐ giữa đt và mp" },
+                  { code: "[TO12.05.5.S05]", name: "Xét VTTĐ giữa mp và mc" },
+                  { code: "[TO12.05.5.S06]", name: "Xét VTTĐ giữa đt và mc" },
+                  { code: "[TO12.05.5.S07]", name: "Góc giữa hai mặt phẳng" },
+                  { code: "[TO12.05.5.S08]", name: "Góc giữa hai đường thẳng" },
+                  { code: "[TO12.05.5.S09]", name: "Góc giữa đường thẳng và mặt phẳng" },
+                  { code: "[TO12.05.5.S10]", name: "Khoảng cách từ 1 điểm đến 1 mặt phẳng" },
+                  { code: "[TO12.05.5.S11]", name: "Khoảng cách từ 1 điểm đến 1 đường thẳng" },
+                  { code: "[TO12.05.5.S12]", name: "Khoảng cách giữa hai đối tượng song song" },
+                  { code: "[TO12.05.5.S13]", name: "Khoảng cách giữa hai đường thẳng chéo nhau" },
+                  { code: "[TO12.05.5.S14]", name: "Tìm giao điểm của đường thẳng và mặt phẳng" },
+                  { code: "[TO12.05.5.S15]", name: "Tìm giao điểm của hai đường thẳng cắt nhau" },
+                  { code: "[TO12.05.5.S16]", name: "Tìm giao điểm của đường thẳng và mặt cầu" },
+                  { code: "[TO12.05.5.S17]", name: "Hình chiếu vuông góc của điểm lên đường, mặt (và ứng dụng)" },
+                  { code: "[TO12.05.5.S18]", name: "Tìm điểm thỏa ĐK đối xứng" },
+                  { code: "[TO12.05.5.S19]", name: "Toán Max-Min tổng hợp" },
+                  { code: "[TO12.05.5.S20]", name: "Toán thực tế, liên môn tổng hợp" }
+                ]
+              },
+              {
+                title: "TOÁN FULL",
+                lessons: [
+                  { code: "[TO12.05.6.S01]", name: "Các câu hỏi chưa phân dạng" },
+                  { code: "[TO12.05.6.S02]", name: "Toán Max-Min liên quan đến mặt cầu (full)" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.06",
+            title: "CHƯƠNG VI: XÁC SUẤT CÓ ĐIỀU KIỆN",
+            topics: [
+              {
+                title: "§18. XÁC SUẤT CÓ ĐIỀU KIỆN",
+                lessons: [
+                  { code: "[TO12.06.1.S01]", name: "Câu hỏi lí thuyết" },
+                  { code: "[TO12.06.1.S02]", name: "Xác suất có điều kiện" },
+                  { code: "[TO12.06.1.S03]", name: "Xác suất toàn phần và công thức Bayes" },
+                  { code: "[TO12.06.1.S04]", name: "Bài toán tổng hợp" },
+                  { code: "[TO12.06.1.S05]", name: "Bài toán thực tế" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "TO12.07",
+            title: "CHƯƠNG VII: CÁC CHUYÊN ĐỀ",
+            topics: [
+              {
+                title: "§19. CÁC CHUYÊN ĐỀ",
+                lessons: [
+                  { code: "[TO12.07.1.S01]", name: "Biến ngẫu nhiên rời rạc và các số đặc trưng" },
+                  { code: "[TO12.07.1.S02]", name: "Biến ngẫu nhiên có phân bố nhị thức" },
+                  { code: "[TO12.07.1.S03]", name: "Vận dụng HPTB1 2 ẩn để giải bài toán quy hoạch tuyến tính" },
+                  { code: "[TO12.07.1.S04]", name: "Vận dụng đạo hàm để giải quyết bài toán tối ưu" },
+                  { code: "[TO12.07.1.S05]", name: "Tiền tệ. Lãi suất" },
+                  { code: "[TO12.07.1.S06]", name: "Tính dụng. Vay nợ" },
+                  { code: "[TO12.07.1.S07]", name: "Đầu tư tài chính. Lập kế hoặc tài chính cá nhân" }
+                ]
+              }
+            ]
+          }
+        ];
+
+        function App() {
+          const [activeGrade, setActiveGrade] = useState('11'); // Đổi state mặc định để bạn dễ thấy lớp 11
+          const [expandedNodes, setExpandedNodes] = useState({ 'TO10.01': true, 'TO11.01': true, 'TO12.01': true });
+          const [configs, setConfigs] = useState([]);
+          const [outputFormat, setOutputFormat] = useState('full');
+          const [generatedText, setGeneratedText] = useState('');
+          const [copied, setCopied] = useState(false);
+          const textRef = useRef(null);
+
+          const toggleNode = (nodeId) => {
+            setExpandedNodes(prev => ({
+              ...prev,
+              [nodeId]: !prev[nodeId]
+            }));
+          };
+
+          const addConfig = (lesson) => {
+            setConfigs([...configs, {
+              id: Date.now() + Math.random(),
+              lesson: lesson,
+              type: 'trac_nghiem',
+              level: 'Nhận biết',
+              count: 1
+            }]);
+          };
+
+          const updateConfig = (id, field, value) => {
+            setConfigs(configs.map(c => c.id === id ? { ...c, [field]: value } : c));
+          };
+
+          const removeConfig = (id) => {
+            setConfigs(configs.filter(c => c.id !== id));
+          };
+
+          const getConfigCount = (lessonCode) => {
+            return configs.filter(c => c.lesson.code === lessonCode).length;
+          };
+
+          const currentData = activeGrade === '10' ? dataTo10 : activeGrade === '11' ? dataTo11 : dataTo12;
+
+          const generateTemplate = () => {
+            if (configs.length === 0) return;
+
+            let text = '';
+
+            if (outputFormat === 'summary') {
+              text += `--- TÓM TẮT CẤU TRÚC (MA TRẬN) ---\n\n`;
+              configs.forEach((config, index) => {
+                let typeName = '';
+                if (config.type === 'trac_nghiem') typeName = 'Trắc nghiệm';
+                if (config.type === 'dung_sai') typeName = 'Đúng/Sai';
+                if (config.type === 'tra_loi_ngan') typeName = 'Trả lời ngắn';
+
+                text += `${index + 1}. Tên bài: ${config.lesson.name} | Loại: ${typeName} | Số câu: ${config.count} | Mức độ: ${config.level}\n`;
+              });
+              setGeneratedText(text);
+              setCopied(false);
+              return;
+            }
+
+            let globalQuestionIndex = 1;
+
+            configs.forEach((config) => {
+              let modifiedCode = config.lesson.code;
+              if (config.type === 'trac_nghiem') {
+                modifiedCode = modifiedCode.replace(/S(\d{2})\]/, 'D$1]');
+              } else if (config.type === 'dung_sai') {
+                modifiedCode = modifiedCode.replace(/S(\d{2})\]/, 'F$1]');
+              }
+
+              let typeName = '';
+              if (config.type === 'trac_nghiem') typeName = 'Trắc nghiệm';
+              if (config.type === 'dung_sai') typeName = 'Đúng/Sai';
+              if (config.type === 'tra_loi_ngan') typeName = 'Trả lời ngắn';
+
+              text += `--- TÊN BÀI: ${config.lesson.name.toUpperCase()} ---\n`;
+              text += `Loại: ${typeName} | Mức độ: ${config.level} | Số câu: ${config.count}\n\n`;
+
+              for (let i = 1; i <= config.count; i++) {
+                if (config.type === 'trac_nghiem') {
+                  text += `Câu ${globalQuestionIndex}: ${modifiedCode} [${config.level}] (Nhập nội dung câu hỏi trắc nghiệm vào đây...)\n`;
+                  text += `A. Lựa chọn A\nB. Lựa chọn B\nC. Lựa chọn C\nD. Lựa chọn D\n`;
+                  text += `Đáp án: ...\n\n`;
+                } 
+                else if (config.type === 'dung_sai') {
+                  text += `Câu ${globalQuestionIndex}: ${modifiedCode} [${config.level}] (Nhập nội dung câu hỏi đúng/sai vào đây...)\n`;
+                  text += `a) Mệnh đề 1\nb) Mệnh đề 2\nc) Mệnh đề 3\nd) Mệnh đề 4\n`;
+                  text += `Đáp án (Đ/S): a[ ] b[ ] c[ ] d[ ]\n\n`;
+                } 
+                else if (config.type === 'tra_loi_ngan') {
+                  text += `Câu ${globalQuestionIndex}: ${modifiedCode} [${config.level}] (Nhập nội dung câu hỏi trả lời ngắn vào đây...)\n`;
+                  text += `Trả lời: ........................................................................\n\n`;
+                }
+                globalQuestionIndex++;
+              }
+            });
+
+            setGeneratedText(text);
+            setCopied(false);
+          };
+
+          const handleCopy = () => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(generatedText).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              });
+            } else {
+              if (textRef.current) {
+                textRef.current.select();
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }
+            }
+          };
+
+          return (
+            <div className="flex flex-col h-screen bg-gray-50 md:flex-row font-sans">
+              
+              {/* CỘT TRÁI: SƠ ĐỒ CÂY */}
+              <div className="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm overflow-hidden">
+                <div className="p-4 bg-blue-600 text-white z-10 flex-shrink-0">
+                  <h1 className="text-lg font-bold flex items-center gap-2 mb-3">
+                    <Layout size={20} />
+                    Ngân hàng câu hỏi Toán
+                  </h1>
+                  
+                  {/* TAB CHUYỂN ĐỔI KHỐI LỚP */}
+                  <div className="flex p-1 bg-blue-800/50 rounded-lg">
+                    <button
+                      onClick={() => setActiveGrade('10')}
+                      className={`flex-1 flex justify-center items-center gap-2 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeGrade === '10' ? 'bg-white text-blue-700 shadow' : 'text-blue-100 hover:text-white hover:bg-blue-700/50'}`}
+                    >
+                      <BookOpen size={16} />
+                      Toán 10
+                    </button>
+                    <button
+                      onClick={() => setActiveGrade('11')}
+                      className={`flex-1 flex justify-center items-center gap-2 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeGrade === '11' ? 'bg-white text-blue-700 shadow' : 'text-blue-100 hover:text-white hover:bg-blue-700/50'}`}
+                    >
+                      <BookOpen size={16} />
+                      Toán 11
+                    </button>
+                    <button
+                      onClick={() => setActiveGrade('12')}
+                      className={`flex-1 flex justify-center items-center gap-2 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeGrade === '12' ? 'bg-white text-blue-700 shadow' : 'text-blue-100 hover:text-white hover:bg-blue-700/50'}`}
+                    >
+                      <BookOpen size={16} />
+                      Toán 12
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 flex-grow overflow-y-auto">
+                  {currentData.map((chapter) => (
+                    <div key={chapter.id} className="mb-2">
+                      <div 
+                        className="flex items-center cursor-pointer p-2 hover:bg-gray-100 rounded text-gray-800 font-semibold"
+                        onClick={() => toggleNode(chapter.id)}
+                      >
+                        {expandedNodes[chapter.id] ? <ChevronDown size={18} className="text-gray-500 mr-1"/> : <ChevronRight size={18} className="text-gray-500 mr-1"/>}
+                        <Folder size={18} className="text-blue-500 mr-2" />
+                        <span className="text-sm">[{chapter.id}] {chapter.title}</span>
+                      </div>
+
+                      {expandedNodes[chapter.id] && (
+                        <div className="ml-6 border-l border-gray-200 pl-2 mt-1">
+                          {chapter.topics.map((topic, tIndex) => {
+                            const topicId = `${chapter.id}-t${tIndex}`;
+                            return (
+                              <div key={topicId} className="mb-1">
+                                <div 
+                                  className="flex items-center cursor-pointer p-1.5 hover:bg-gray-100 rounded text-gray-700 font-medium"
+                                  onClick={() => toggleNode(topicId)}
+                                >
+                                  {expandedNodes[topicId] ? <ChevronDown size={16} className="text-gray-400 mr-1"/> : <ChevronRight size={16} className="text-gray-400 mr-1"/>}
+                                  <Folder size={16} className="text-yellow-500 mr-2" />
+                                  <span className="text-sm">{topic.title}</span>
+                                </div>
+
+                                {expandedNodes[topicId] && (
+                                  <div className="ml-6 mt-1 space-y-1">
+                                    {topic.lessons.map((lesson) => {
+                                      const count = getConfigCount(lesson.code);
+                                      return (
+                                        <div 
+                                          key={lesson.code}
+                                          onClick={() => addConfig(lesson)}
+                                          className={`flex items-center cursor-pointer p-1.5 rounded text-sm group transition-colors ${count > 0 ? 'bg-blue-50 text-blue-800 font-medium' : 'hover:bg-gray-100 text-gray-600'}`}
+                                        >
+                                          <FileText size={14} className={`mr-2 flex-shrink-0 ${count > 0 ? 'text-blue-600' : 'text-gray-400'}`} />
+                                          <span className="flex-grow flex items-center pr-2">
+                                            <span className="text-xs bg-gray-200 text-gray-600 px-1 rounded mr-1 flex-shrink-0">{lesson.code}</span>
+                                            <span className="line-clamp-2">{lesson.name}</span>
+                                          </span>
+                                          {count > 0 ? (
+                                            <span className="ml-auto flex-shrink-0 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                              {count}
+                                            </span>
+                                          ) : (
+                                            <PlusCircle size={16} className="ml-auto text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* KHU VỰC LIÊN KẾT TIỆN ÍCH */}
+                <div className="p-4 bg-gray-50 border-t border-gray-200 flex-shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                  <h3 className="text-sm font-bold text-gray-700 mb-2.5 flex items-center gap-1.5">
+                    <ExternalLink size={16} className="text-blue-600" />
+                    Liên kết tiện ích
+                  </h3>
+                  <ul className="space-y-2">
+                    <li><a href="https://baigiangthaytienluc.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> Bài giảng thầy Tiến Lực</a></li>
+                    <li><a href="https://vongquaytoanhoc.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> Vòng quay Toán học</a></li>
+                    <li><a href="https://pptonline-self.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> PPT Online</a></li>
+                    <li><a href="https://k12onlineppt2026.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> K12 Online PPT 2026</a></li>
+                    <li><a href="https://lichbaogiang-ten.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> Lịch báo giảng</a></li>
+                    <li><a href="https://mathgamev1.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> Math Game v1</a></li>
+                    <li><a href="https://khongcogitucodaucon.vercel.app/" target="_blank" rel="noreferrer" className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors"><ChevronRight size={12} className="text-gray-400"/> Không có gì từ có đâu con</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* CỘT PHẢI: KHU VỰC CÀI ĐẶT VÀ TẠO VĂN BẢN */}
+              <div className="w-full md:w-2/3 p-6 h-full overflow-y-auto flex flex-col bg-gray-100">
+                <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
+                  
+                  {/* Box Cài đặt (Các bài học đã chọn) */}
+                  <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-4 flex-shrink-0">
+                    <div className="flex justify-between items-center mb-4 border-b pb-2">
+                      <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <Settings size={20} className="text-blue-600"/>
+                        Cấu hình câu hỏi
+                      </h2>
+                      {configs.length > 0 && (
+                        <button
+                          onClick={() => setConfigs([])}
+                          className="bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold px-3 py-1 rounded transition-colors"
+                        >
+                          Xoá tất cả
+                        </button>
+                      )}
+                    </div>
+
+                    {configs.length === 0 ? (
+                       <div className="text-center py-8 text-gray-400">
+                         <Layout size={48} className="mx-auto mb-3 opacity-50" />
+                         <p className="text-sm font-medium">Chưa có bài học nào được chọn.</p>
+                         <p className="text-xs mt-1">Vui lòng bấm vào danh sách bên trái để thêm bài học vào cấu hình.</p>
+                       </div>
+                    ) : (
+                      <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 pb-2">
+                        {configs.map((config, index) => (
+                          <div key={config.id} className="bg-gray-50 border border-gray-200 p-3 rounded flex flex-col gap-3 relative hover:border-blue-300 transition-colors shadow-sm">
+                            {/* Header: Tên bài & Code */}
+                            <div className="flex items-start justify-between pr-8">
+                              <div className="text-sm font-bold text-gray-800">
+                                <span className="text-blue-600 mr-2">{config.lesson.code}</span>
+                                {config.lesson.name}
+                              </div>
+                              <button 
+                                onClick={() => removeConfig(config.id)}
+                                className="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors"
+                                title="Xoá cấu hình này"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+
+                            {/* Controls: Loại, Mức độ, Số lượng */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Loại câu hỏi:</label>
+                                <select 
+                                  value={config.type} 
+                                  onChange={(e) => updateConfig(config.id, 'type', e.target.value)}
+                                  className="w-full border border-gray-300 rounded p-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="trac_nghiem">Trắc nghiệm 4 lựa chọn</option>
+                                  <option value="dung_sai">Trắc nghiệm Đúng/Sai</option>
+                                  <option value="tra_loi_ngan">Trả lời ngắn</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Mức độ:</label>
+                                <select 
+                                  value={config.level} 
+                                  onChange={(e) => updateConfig(config.id, 'level', e.target.value)}
+                                  className="w-full border border-gray-300 rounded p-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="Nhận biết">Nhận biết</option>
+                                  <option value="Thông hiểu">Thông hiểu</option>
+                                  <option value="Vận dụng">Vận dụng</option>
+                                  <option value="Vận dụng cao">Vận dụng cao</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Số câu:</label>
+                                <input 
+                                  type="number" 
+                                  min="1" 
+                                  max="50"
+                                  value={config.count} 
+                                  onChange={(e) => updateConfig(config.id, 'count', Number(e.target.value))}
+                                  className="w-full border border-gray-300 rounded p-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-4 border-t border-gray-200 pt-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Định dạng xuất văn bản:</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-1.5 rounded border border-gray-200 hover:bg-blue-50">
+                              <input type="radio" value="full" checked={outputFormat === 'full'} onChange={(e) => setOutputFormat(e.target.value)} className="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                              <span className="text-sm font-medium text-gray-700">Đề thi chi tiết</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-1.5 rounded border border-gray-200 hover:bg-blue-50">
+                              <input type="radio" value="summary" checked={outputFormat === 'summary'} onChange={(e) => setOutputFormat(e.target.value)} className="text-blue-600 focus:ring-blue-500 w-4 h-4" />
+                              <span className="text-sm font-medium text-gray-700">Tóm tắt (Ma trận)</span>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {configs.length > 0 && (
+                          <div className="text-right">
+                            <div className="text-sm text-gray-500">Tổng số câu hỏi:</div>
+                            <div className="text-2xl font-bold text-blue-600">{configs.reduce((acc, curr) => acc + curr.count, 0)}</div>
+                          </div>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={generateTemplate}
+                        disabled={configs.length === 0}
+                        className={`w-full font-bold text-lg py-3 px-4 rounded-lg transition-colors shadow-sm ${configs.length > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                      >
+                        Sinh mẫu văn bản
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Box Kết quả sinh */}
+                  {generatedText && (
+                    <div className="bg-white flex flex-col flex-grow rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4">
+                      <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                        <span className="font-semibold text-gray-700 text-sm">Văn bản kết quả:</span>
+                        <button 
+                          onClick={handleCopy}
+                          className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded font-medium transition-colors ${copied ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                        >
+                          {copied ? <Check size={16} /> : <Copy size={16} />}
+                          {copied ? 'Đã Copy!' : 'Copy nội dung'}
+                        </button>
+                      </div>
+                      <textarea 
+                        ref={textRef}
+                        value={generatedText}
+                        readOnly
+                        className="w-full flex-grow p-4 text-gray-800 font-mono text-sm focus:outline-none resize-none min-h-[300px]"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
