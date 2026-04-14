@@ -1377,10 +1377,11 @@
             }));
           };
 
-          const addConfig = (lesson) => {
+          const addConfig = (lesson, topicTitle) => {
             setConfigs([...configs, {
               id: Date.now() + Math.random(),
               lesson: lesson,
+              topicTitle: topicTitle,
               type: 'trac_nghiem',
               level: 'Nhận biết',
               count: 1
@@ -1420,7 +1421,7 @@
                 if (config.type === 'dung_sai') typeName = 'Đúng/Sai';
                 if (config.type === 'tra_loi_ngan') typeName = 'Trả lời ngắn';
 
-                text += `${index + 1}. Tên bài: ${config.lesson.name} | Loại: ${typeName} | Số câu: ${config.count} | Mức độ: ${config.level}\n`;
+                text += `${index + 1}. Bài: ${config.lesson.name} - Dạng: ${config.topicTitle} | Loại: ${typeName} | Số câu: ${config.count} | Mức độ: ${config.level}\n`;
               });
               setGeneratedText(text);
               setCopied(false);
@@ -1442,7 +1443,8 @@
               if (config.type === 'dung_sai') typeName = 'Đúng/Sai';
               if (config.type === 'tra_loi_ngan') typeName = 'Trả lời ngắn';
 
-              text += `--- TÊN BÀI: ${config.lesson.name.toUpperCase()} ---\n`;
+              text += `--- BÀI: ${config.lesson.name.toUpperCase()} ---\n`;
+              text += `--- DẠNG: ${config.topicTitle.toUpperCase()} ---\n`;
               text += `Loại: ${typeName} | Mức độ: ${config.level} | Số câu: ${config.count}\n\n`;
 
               for (let i = 1; i <= config.count; i++) {
@@ -1555,7 +1557,7 @@
                                       return (
                                         <div 
                                           key={lesson.code}
-                                          onClick={() => addConfig(lesson)}
+                                          onClick={() => addConfig(lesson, topic.title)}
                                           className={`flex items-center cursor-pointer p-1.5 rounded text-sm group transition-colors ${count > 0 ? 'bg-blue-50 text-blue-800 font-medium' : 'hover:bg-gray-100 text-gray-600'}`}
                                         >
                                           <FileText size={14} className={`mr-2 flex-shrink-0 ${count > 0 ? 'text-blue-600' : 'text-gray-400'}`} />
@@ -1635,9 +1637,12 @@
                           <div key={config.id} className="bg-gray-50 border border-gray-200 p-3 rounded flex flex-col gap-3 relative hover:border-blue-300 transition-colors shadow-sm">
                             {/* Header: Tên bài & Code */}
                             <div className="flex items-start justify-between pr-8">
-                              <div className="text-sm font-bold text-gray-800">
-                                <span className="text-blue-600 mr-2">{config.lesson.code}</span>
-                                {config.lesson.name}
+                              <div className="flex-grow">
+                                <div className="text-xs text-gray-500 mb-0.5">{config.topicTitle}</div>
+                                <div className="text-sm font-bold text-gray-800">
+                                  <span className="text-blue-600 mr-2">{config.lesson.code}</span>
+                                  {config.lesson.name}
+                                </div>
                               </div>
                               <button 
                                 onClick={() => removeConfig(config.id)}
